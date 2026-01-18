@@ -29,9 +29,7 @@ public class UnitOfWork(
     public async Task BeginTransactionAsync()
     {
         if (_currentTransaction is not null)
-        {
             throw new InvalidOperationException("A transaction is already in progress.");
-        }
 
         _currentTransaction = await DbContext.Database.BeginTransactionAsync();
     }
@@ -62,9 +60,8 @@ public class UnitOfWork(
     public async Task RollbackTransactionAsync()
     {
         if (_currentTransaction is null)
-        {
             throw new InvalidOperationException("A transaction must be in progress to execute rollback.");
-        }
+
         try
         {
             await _currentTransaction.RollbackAsync();

@@ -24,7 +24,13 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .HasMaxLength(100)
             .IsRequired();
 
-        // Связь с Project
+        builder.Property(d => d.FileSize)
+            .IsRequired();
+
+        builder.Property(d => d.UploadDate)
+            .IsRequired();
+
+        // Связь: Document -> Project (Many-to-One)
         builder.HasOne(d => d.Project)
             .WithMany(p => p.Documents)
             .HasForeignKey(d => d.ProjectId)

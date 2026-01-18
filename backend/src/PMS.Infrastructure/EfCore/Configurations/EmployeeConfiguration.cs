@@ -12,7 +12,7 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 
         builder.HasKey(e => e.Id);
 
-        // Value Objects
+        // Value Objects (Owned types)
         builder.OwnsOne(e => e.FullName, fn =>
         {
             fn.Property(f => f.FirstName).HasColumnName("FirstName").HasMaxLength(100);
@@ -22,23 +22,26 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 
         builder.OwnsOne(e => e.Email, e =>
         {
-            e.Property(x => x.Value)
-                .HasColumnName("email")
-                .HasMaxLength(100);
+            e.Property(x => x.Value).HasColumnName("Email").HasMaxLength(200);
         });
 
-        // Навигационные свойства
-        builder.HasMany<Project>()
+        // Связь: Employee -> ManagedProjects (One-to-Many)
+        builder.HasMany(e => e.ManagedProjects)
             .WithOne(p => p.Manager)
             .HasForeignKey(p => p.ManagerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(p => p.AssignedProjects)
+        // Связь: Employee -> AssignedProjects (Many-to-Many)
+        builder.HasMany(e => e.AssignedProjects)
             .WithMany(p => p.Employees)
             .UsingEntity<Dictionary<string, object>>(
-                "EmployeeProjects",
+                "EmployeeProject",
                 j => j.HasOne<Project>().WithMany().HasForeignKey("ProjectId"),
                 j => j.HasOne<Employee>().WithMany().HasForeignKey("EmployeeId"),
-                j => j.ToTable("EmployeeProjects"));
+                j =>
+                {
+                    j.ToTable("EmployeeProjects");
+                    j.HasKey("EmployeeId", "ProjectId");
+                });
     }
 }
