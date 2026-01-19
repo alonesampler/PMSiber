@@ -28,6 +28,20 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.Priority)
             .IsRequired();
 
+        builder.Property(p => p.StartDate)
+            .HasConversion(
+                v => v.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
+                    : v.ToUniversalTime(),
+                v => v);
+
+        builder.Property(p => p.EndDate)
+            .HasConversion(
+                v => v.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(v, DateTimeKind.Utc)
+                    : v.ToUniversalTime(),
+                v => v);
+
         // Связь: Project -> Manager (One-to-Many)
         builder.HasOne(p => p.Manager)
             .WithMany(e => e.ManagedProjects)

@@ -5,7 +5,7 @@ namespace PMS.Application.Interfaces;
 public interface IProjectService
 {
     Task<ProjectResponseDto> CreateAsync(
-        CreateProjectDto dto);
+        ProjectUpsertDto dto);
 
     Task<ProjectResponseDto> GetByIdAsync(Guid id);
 
@@ -18,7 +18,7 @@ public interface IProjectService
 
     Task UpdateAsync(
         Guid id,
-        UpdateProjectDto dto);
+        ProjectUpsertDto dto);
 
     Task DeleteAsync(Guid id);
 }

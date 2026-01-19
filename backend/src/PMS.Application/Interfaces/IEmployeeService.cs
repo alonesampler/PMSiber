@@ -7,7 +7,7 @@ public interface IEmployeeService
     Task<EmployeeResponseDto?> GetByIdAsync(Guid id);
     Task<IEnumerable<EmployeeResponseDto>> GetAllAsync();
     Task<IEnumerable<EmployeeResponseDto>> SearchAsync(string? query);
-    Task CreateAsync(EmployeeParamsDto dto);
+    Task<EmployeeResponseDto> CreateAsync(EmployeeParamsDto dto);
     Task UpdateAsync(Guid id, EmployeeParamsDto dto);
     Task DeleteAsync(Guid id);
 }

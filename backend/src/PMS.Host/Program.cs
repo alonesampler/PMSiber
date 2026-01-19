@@ -1,71 +1,73 @@
 using Microsoft.EntityFrameworkCore;
-using PMS.Api.Middleware;
+using PMS.Api.Extensions;
 using PMS.Application;
 using PMS.Infrastructure;
-using PMS.Infrastructure.EfCore;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// configure loggingr
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddApplication(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration);
-
+// configure controllers and JSON options
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null;
-        options.JsonSerializerOptions.WriteIndented = true;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
     });
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new() { Title = "Project Management System API", Version = "v1" });
-});
+// configure layers
+builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
-});
+// configure custom services and configurations
+builder.Services
+    .AddHttpContextAccessor()
+    .AddCorsConfiguration(builder.Configuration)
+    .AddSwaggerConfiguration();
+
+// Health Checks
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// conver Middleware
+app.UseApiMiddlewares();
+
+// development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PMS API v1");
+        options.RoutePrefix = "api-docs";
+        options.DocumentTitle = "PMS API Documentation";
+    });
+
+    // other dev-specific middleware
+    app.UseDeveloperExceptionPage();
 }
 
-app.UseCors("AllowAll");
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-
-using (var scope = app.Services.CreateScope())
+// production
+if (app.Environment.IsProduction())
 {
-    try
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await dbContext.Database.MigrateAsync();
-        Console.WriteLine("Database migrated successfully");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error migrating database: {ex.Message}");
-    }
+    app.UseHsts();
+    app.UseHttpsRedirection();
 }
+
+// main middleware
+app.UseCors("Frontend");
+app.UseAuthentication(); // if add authentication
+app.UseAuthorization();
+
+// Endpoints
+app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

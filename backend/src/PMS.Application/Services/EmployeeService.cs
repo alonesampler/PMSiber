@@ -10,31 +10,34 @@ namespace PMS.Application.Services;
 
 public class EmployeeService(IUnitOfWork UnitOfWork) : IEmployeeService
 {
-    public async Task CreateAsync(EmployeeParamsDto dto)
+    public async Task<EmployeeResponseDto> CreateAsync(EmployeeParamsDto dto)
     {
-        // Проверяем уникальность email
         var existing = await UnitOfWork.EmployeeRepository.GetByEmailAsync(dto.Email);
-
         if (existing is not null)
-            throw new DomainException("Сотрудник с таким email уже существует");
+            throw new DomainException(
+                "Сотрудник с таким email уже существует",
+                "EMPLOYEE_EMAIL_ALREADY_EXISTS"
+            );
 
-        // Создаем Value Objects
         var fullName = FullName.Create(dto.FirstName, dto.LastName, dto.MiddleName);
         var email = new Email(dto.Email);
 
-        // Создаем сотрудника через конструктор
         var employee = Employee.Create(Guid.CreateVersion7(), fullName, email);
 
         await UnitOfWork.EmployeeRepository.CreateAsync(employee);
         await UnitOfWork.SaveChangesAsync();
+
+        return employee.ToResponseDto();
     }
 
-    public async Task<EmployeeResponseDto?> GetByIdAsync(Guid id)
+    public async Task<EmployeeResponseDto> GetByIdAsync(Guid id)
     {
         var employee = await UnitOfWork.EmployeeRepository.GetByIdAsync(id);
-
         if (employee == null)
-            throw new DomainException("Сотрудник не найден");
+            throw new DomainException(
+                "Сотрудник не найден",
+                "EMPLOYEE_NOT_FOUND"
+            );
 
         return employee.ToResponseDto();
     }
@@ -43,22 +46,24 @@ public class EmployeeService(IUnitOfWork UnitOfWork) : IEmployeeService
     {
         var employee = await UnitOfWork.EmployeeRepository.GetByIdAsync(id);
         if (employee == null)
-            throw new DomainException("Сотрудник не найден");
+            throw new DomainException(
+                "Сотрудник не найден",
+                "EMPLOYEE_NOT_FOUND"
+            );
 
-        // Проверяем уникальность email
         if (employee.Email.Value != dto.Email)
         {
             var existing = await UnitOfWork.EmployeeRepository.GetByEmailAsync(dto.Email);
-
             if (existing is not null)
-                throw new DomainException("Сотрудник с таким email уже существует");
+                throw new DomainException(
+                    "Сотрудник с таким email уже существует",
+                    "EMPLOYEE_EMAIL_ALREADY_EXISTS"
+                );
         }
 
-        // Создаем новые Value Objects
         var newFullName = FullName.Create(dto.FirstName, dto.LastName, dto.MiddleName);
         var newEmail = new Email(dto.Email);
 
-        // Используем метод Update сущности
         employee.Update(newFullName, newEmail);
 
         await UnitOfWork.EmployeeRepository.UpdateAsync(employee);
@@ -68,13 +73,17 @@ public class EmployeeService(IUnitOfWork UnitOfWork) : IEmployeeService
     public async Task DeleteAsync(Guid id)
     {
         var employee = await UnitOfWork.EmployeeRepository.GetByIdAsync(id);
+        if (employee == null)
+            throw new DomainException(
+                "Сотрудник не найден",
+                "EMPLOYEE_NOT_FOUND"
+            );
 
-        if (employee is null)
-            throw new DomainException("Сотрудник не найден");
-
-        // Проверяем, не является ли сотрудник менеджером проектов
         if (employee.ManagedProjects.Any())
-            throw new DomainException("Нельзя удалить сотрудника, который является менеджером проектов");
+            throw new DomainException(
+                "Нельзя удалить сотрудника, который является менеджером проектов",
+                "EMPLOYEE_IS_MANAGER"
+            );
 
         await UnitOfWork.EmployeeRepository.DeleteAsync(employee);
         await UnitOfWork.SaveChangesAsync();
@@ -83,7 +92,6 @@ public class EmployeeService(IUnitOfWork UnitOfWork) : IEmployeeService
     public async Task<IEnumerable<EmployeeResponseDto>> GetAllAsync()
     {
         var employees = await UnitOfWork.EmployeeRepository.GetAllAsync();
-
         return employees.ToResponseDtos();
     }
 
@@ -93,7 +101,6 @@ public class EmployeeService(IUnitOfWork UnitOfWork) : IEmployeeService
             return await GetAllAsync();
 
         var employees = await UnitOfWork.EmployeeRepository.SearchAsync(query);
-
         return employees.ToResponseDtos();
     }
 }

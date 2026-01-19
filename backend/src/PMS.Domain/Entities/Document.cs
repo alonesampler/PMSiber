@@ -14,7 +14,6 @@ public class Document : Entity<Guid>
         long fileSize,
         Guid projectId) : base(id)
     {
-        Id = id;
         FileName = fileName;
         FilePath = filePath;
         ContentType = contentType;
@@ -54,37 +53,38 @@ public class Document : Entity<Guid>
     private static void Validate(string fileName, string contentType, long fileSize)
     {
         if (string.IsNullOrWhiteSpace(fileName))
-            throw new DomainException("File name is required");
+            throw new DomainException("File name is required", "DOCUMENT_FILE_NAME_REQUIRED");
 
         if (fileName.Length > 500)
-            throw new DomainException("File name is too long");
+            throw new DomainException("File name is too long", "DOCUMENT_FILE_NAME_TOO_LONG");
 
         if (string.IsNullOrWhiteSpace(contentType))
-            throw new DomainException("Content type is required");
+            throw new DomainException("Content type is required", "DOCUMENT_CONTENT_TYPE_REQUIRED");
 
         if (fileSize <= 0)
-            throw new DomainException("File size must be positive");
+            throw new DomainException("File size must be positive", "DOCUMENT_FILE_SIZE_INVALID");
 
         const long MAX_SIZE = 100 * 1024 * 1024;
         if (fileSize > MAX_SIZE)
-            throw new DomainException($"File size exceeds maximum of {MAX_SIZE / 1024 / 1024} MB");
+            throw new DomainException(
+                $"File size exceeds maximum of {MAX_SIZE / 1024 / 1024} MB",
+                "DOCUMENT_FILE_SIZE_TOO_LARGE"
+            );
     }
 
     public void UpdateFileName(string newFileName)
     {
         if (string.IsNullOrWhiteSpace(newFileName))
-            throw new DomainException("File name is required");
+            throw new DomainException("File name is required", "DOCUMENT_FILE_NAME_REQUIRED");
 
         if (newFileName.Length > 500)
-            throw new DomainException("File name is too long");
+            throw new DomainException("File name is too long", "DOCUMENT_FILE_NAME_TOO_LONG");
 
         FileName = newFileName;
     }
 
     public string GetFileExtension()
-    {
-        return Path.GetExtension(FileName).ToLowerInvariant();
-    }
+        => Path.GetExtension(FileName).ToLowerInvariant();
 
     public bool IsImage()
     {

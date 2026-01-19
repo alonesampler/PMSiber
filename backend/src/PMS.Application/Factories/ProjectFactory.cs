@@ -7,37 +7,50 @@ public static class ProjectFactory
 {
     public static ProjectResponseDto ToResponseDto(this Project project)
     {
-        if (project == null) return null!;
+        var startDate = project.StartDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(project.StartDate, DateTimeKind.Utc)
+            : project.StartDate;
 
-        return new ProjectResponseDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            CustomerCompanyName = project.CustomerCompanyName,
-            ExecutorCompanyName = project.ExecutorCompanyName,
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            Priority = project.Priority,
-            Manager = project.Manager?.ToResponseDto(),
-            Employees = project.Employees.ToResponseDtos().ToList()
-        };
+        var endDate = project.EndDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(project.EndDate, DateTimeKind.Utc)
+            : project.EndDate;
+
+        return new ProjectResponseDto(
+            project.Id,
+            project.Name,
+            project.CustomerCompanyName,
+            project.ExecutorCompanyName,
+            startDate,
+            endDate,
+            project.Priority,
+            project.Manager!.ToResponseDto(),
+            project.Employees.ToResponseDtos().ToList()
+        );
     }
 
     public static ProjectListDto ToListDto(this Project project)
     {
-        return new ProjectListDto
-        {
-            Id = project.Id,
-            Name = project.Name,
-            CustomerCompanyName = project.CustomerCompanyName,
-            StartDate = project.StartDate,
-            EndDate = project.EndDate,
-            Priority = project.Priority,
-            ManagerName = project.Manager != null
-                ? $"{project.Manager.FullName.LastName} {project.Manager.FullName.FirstName}"
-                : string.Empty,
-            EmployeesCount = project.Employees.Count,
-            IsActive = project.StartDate <= DateTime.UtcNow && project.EndDate >= DateTime.UtcNow
-        };
+        var managerName = project.Manager is null
+            ? string.Empty
+            : $"{project.Manager.FullName.LastName} {project.Manager.FullName.FirstName}";
+
+        var startDate = project.StartDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(project.StartDate, DateTimeKind.Utc)
+            : project.StartDate;
+
+        var endDate = project.EndDate.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(project.EndDate, DateTimeKind.Utc)
+            : project.EndDate;
+
+        return new ProjectListDto(
+            project.Id,
+            project.Name,
+            project.CustomerCompanyName,
+            startDate,
+            endDate,
+            project.Priority,
+            managerName,
+            project.Employees.Count
+        );
     }
 }

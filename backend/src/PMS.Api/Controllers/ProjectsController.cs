@@ -30,21 +30,21 @@ public class ProjectsController(IProjectService ProjectService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Create([FromBody] CreateProjectDto dto)
+    public async Task<ActionResult<ProjectResponseDto>> Create([FromBody] ProjectUpsertDto dto)
     {
-        var project = await ProjectService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = project.Id }, project);
+        var created = await ProjectService.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult> Update(Guid id, [FromBody] UpdateProjectDto dto)
+    public async Task<IActionResult> Update(Guid id, [FromBody] ProjectUpsertDto dto)
     {
         await ProjectService.UpdateAsync(id, dto);
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<ActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await ProjectService.DeleteAsync(id);
         return NoContent();
