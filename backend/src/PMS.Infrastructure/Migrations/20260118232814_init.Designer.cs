@@ -12,7 +12,7 @@ using PMS.Infrastructure.EfCore;
 namespace PMS.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260118092055_init")]
+    [Migration("20260118232814_init")]
     partial class init
     {
         /// <inheritdoc />

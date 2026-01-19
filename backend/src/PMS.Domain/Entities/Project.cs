@@ -19,7 +19,6 @@ public class Project : Entity<Guid>
         int priority,
         Guid managerId) : base(id)
     {
-        Id = id;
         Name = name;
         CustomerCompanyName = customerCompanyName;
         ExecutorCompanyName = executorCompanyName;
@@ -52,7 +51,7 @@ public class Project : Entity<Guid>
         int priority,
         Guid managerId)
     {
-        CanValidate(name, startDate, endDate, priority);
+        Validate(name, startDate, endDate, priority);
 
         return new Project(
             id,
@@ -65,23 +64,23 @@ public class Project : Entity<Guid>
             managerId);
     }
 
-    private static void CanValidate(
+    private static void Validate(
         string name,
         DateTime startDate,
         DateTime endDate,
         int priority)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new DomainException("Project name is required");
+            throw new DomainException("Project name is required", "PROJECT_NAME_REQUIRED");
 
         if (name.Length > 200)
-            throw new DomainException("Project name is too long");
+            throw new DomainException("Project name is too long", "PROJECT_NAME_TOO_LONG");
 
         if (startDate >= endDate)
-            throw new DomainException("Start date must be before end date");
+            throw new DomainException("Start date must be before end date", "PROJECT_DATE_RANGE_INVALID");
 
         if (priority < 1 || priority > 10)
-            throw new DomainException("Priority must be between 1 and 10");
+            throw new DomainException("Priority must be between 1 and 10", "PROJECT_PRIORITY_INVALID");
     }
 
     public void Update(
@@ -92,7 +91,7 @@ public class Project : Entity<Guid>
         DateTime endDate,
         int priority)
     {
-        CanValidate(name, startDate, endDate, priority);
+        Validate(name, startDate, endDate, priority);
 
         Name = name;
         CustomerCompanyName = customerCompanyName;
@@ -105,10 +104,13 @@ public class Project : Entity<Guid>
     public void ChangeManager(Employee manager)
     {
         if (manager is null)
-            throw new DomainException("Manager cannot be null");
+            throw new DomainException("Manager cannot be null", "PROJECT_MANAGER_NULL");
 
         if (_employees.Any(e => e.Id == manager.Id))
-            throw new DomainException("Manager cannot be a project employee");
+            throw new DomainException(
+                "Manager cannot be a project employee",
+                "PROJECT_MANAGER_IS_EMPLOYEE"
+            );
 
         ManagerId = manager.Id;
         Manager = manager;
@@ -117,13 +119,19 @@ public class Project : Entity<Guid>
     public void AddEmployee(Employee employee)
     {
         if (employee is null)
-            throw new DomainException("Employee cannot be null");
+            throw new DomainException("Employee cannot be null", "PROJECT_EMPLOYEE_NULL");
 
         if (employee.Id == ManagerId)
-            throw new DomainException("Manager cannot be added as employee");
+            throw new DomainException(
+                "Manager cannot be added as employee",
+                "PROJECT_MANAGER_AS_EMPLOYEE"
+            );
 
         if (_employees.Any(e => e.Id == employee.Id))
-            throw new DomainException("Employee already in project");
+            throw new DomainException(
+                "Employee already in project",
+                "PROJECT_EMPLOYEE_ALREADY_EXISTS"
+            );
 
         _employees.Add(employee);
     }
@@ -131,12 +139,13 @@ public class Project : Entity<Guid>
     public void RemoveEmployee(Guid employeeId)
     {
         if (employeeId == ManagerId)
-            throw new DomainException("Cannot remove manager from employees");
+            throw new DomainException(
+                "Cannot remove manager from employees",
+                "PROJECT_REMOVE_MANAGER_FORBIDDEN"
+            );
 
         var employee = _employees.FirstOrDefault(e => e.Id == employeeId);
-        if (employee is null)
-            return;
-
-        _employees.Remove(employee);
+        if (employee != null)
+            _employees.Remove(employee);
     }
 }

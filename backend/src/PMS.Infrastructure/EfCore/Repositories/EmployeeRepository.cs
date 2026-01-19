@@ -17,8 +17,6 @@ public class EmployeeRepository(AppDbContext DbContext) : IEmployeeRepository
 
     public  Task<Employee[]> GetAllAsync()
         =>  DbContext.Employees
-            .Include(e => e.ManagedProjects)
-            .Include(e => e.AssignedProjects)
             .ToArrayAsync();
 
     public Task<Employee[]> SearchAsync(string? query)
@@ -27,12 +25,13 @@ public class EmployeeRepository(AppDbContext DbContext) : IEmployeeRepository
             return GetAllAsync();
 
         return DbContext.Employees
-            .Where(e => e.FullName.FirstName.Contains(query) ||
-                       e.FullName.LastName.Contains(query) ||
-                       (e.FullName.MiddleName != null && e.FullName.MiddleName.Contains(query)) ||
-                       e.Email.Value.Contains(query))
-            .Include(e => e.ManagedProjects)
-            .Include(e => e.AssignedProjects)
+            .Where(e =>
+                EF.Functions.ILike(e.FullName.FirstName, $"%{query}%") ||
+                EF.Functions.ILike(e.FullName.LastName, $"%{query}%") ||
+                (e.FullName.MiddleName != null &&
+                 EF.Functions.ILike(e.FullName.MiddleName, $"%{query}%")) ||
+                EF.Functions.ILike(e.Email.Value, $"%{query}%")
+            )
             .ToArrayAsync();
     }
 

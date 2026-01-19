@@ -15,7 +15,6 @@ public class Employee : Entity<Guid>
         FullName fullName,
         Email email) : base(id)
     {
-        Id = id;
         FullName = fullName;
         Email = email;
     }
@@ -62,15 +61,13 @@ public class Employee : Entity<Guid>
 
     public void Update(FullName fullName, Email email)
     {
-        if (FullName != fullName)
+        if (!Equals(FullName, fullName))
             FullName = fullName;
 
-        if (Email != email)
+        if (!Equals(Email, email))
             Email = email;
     }
 
     public bool IsManagerOfProject(Guid projectId)
-    {
-        return _managedProjects.Any(p => p.Id == projectId);
-    }
+        => _managedProjects.Any(p => p.Id == projectId);
 }

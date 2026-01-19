@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace PMS.Application.DTOs.Employees;
 
-namespace PMS.Application.DTOs.Employees;
-
-public class EmployeeResponseDto
-{
-    public Guid Id { get; init; }
-    public string FirstName { get; init; } = string.Empty;
-    public string LastName { get; init; } = string.Empty;
-    public string? MiddleName { get; init; }
-    public string Email { get; init; } = string.Empty;
-}
+public sealed record EmployeeResponseDto(
+    Guid Id,
+    string FirstName,
+    string LastName,
+    string? MiddleName,
+    string Email);

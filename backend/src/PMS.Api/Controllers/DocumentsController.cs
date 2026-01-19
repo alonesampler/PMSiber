@@ -29,13 +29,12 @@ public class DocumentsController(IDocumentService DocumentService) : ControllerB
         if (file == null || file.Length == 0)
             return BadRequest("File is required");
 
-        var uploadDto = new UploadDocumentDto
-        {
-            ProjectId = dto.ProjectId,
-            FileName = file.FileName,
-            ContentType = file.ContentType,
-            FileSize = file.Length
-        };
+        var uploadDto = new UploadDocumentDto(
+            dto.ProjectId,
+            dto.FileName,
+            dto.ContentType,
+            dto.FileSize
+        );
 
         await using var stream = file.OpenReadStream();
         var document = await DocumentService.UploadAsync(uploadDto, stream);
@@ -44,18 +43,20 @@ public class DocumentsController(IDocumentService DocumentService) : ControllerB
     }
 
     [HttpGet("{id:guid}/download")]
-    public async Task<ActionResult> Download(Guid id)
+    public async Task<IActionResult> Download(Guid id)
     {
         var fileStream = await DocumentService.DownloadAsync(id);
-
-        // Получаем документ для имени файла
         var document = await DocumentService.GetByIdAsync(id);
 
-        return File(fileStream, "application/octet-stream", document?.FileName);
+        return File(
+            fileStream,
+            document.ContentType,
+            document.FileName
+        );
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<ActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         await DocumentService.DeleteAsync(id);
         return NoContent();

@@ -13,6 +13,6 @@ public static class ApplicationDiConfigurator
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IEmployeeService, EmployeeService>();
 
-        services.AddHttpContextAccessor();
+
     }
 }

@@ -16,37 +16,42 @@ public class DocumentService(
 {
     private readonly string _dataRootPath = Path.GetFullPath(Path.Combine(
         Directory.GetCurrentDirectory(),
-        "..", "..", "data"));
+        "..", "..", "..", "data"));
 
     public async Task<DocumentResponseDto> UploadAsync(
         UploadDocumentDto request,
         Stream fileStream)
     {
-        // Проверяем существование проекта
         var project = await UnitOfWork.ProjectRepository.GetByIdAsync(request.ProjectId);
         if (project == null)
-            throw new DomainException($"Проект с ID {request.ProjectId} не найден");
+            throw new DomainException(
+                "Проект не найден",
+                "PROJECT_NOT_FOUND"
+            );
 
-        // Валидация файла
         ValidateFile(request);
 
-        // Создаем папку проекта
-        var projectFolder = Path.Combine(_dataRootPath, "uploads", "projects", request.ProjectId.ToString());
+        var projectFolder = Path.Combine(
+            _dataRootPath,
+            "uploads",
+            "projects",
+            request.ProjectId.ToString());
+
         Directory.CreateDirectory(projectFolder);
 
-        // Генерируем уникальное имя файла
         var extension = Path.GetExtension(request.FileName).ToLowerInvariant();
         var uniqueFileName = $"{Guid.NewGuid()}{extension}";
         var filePath = Path.Combine(projectFolder, uniqueFileName);
 
-        // Сохраняем файл
         await using (var fs = new FileStream(filePath, FileMode.Create))
             await fileStream.CopyToAsync(fs);
 
-        // Относительный путь (от data)
-        var relativePath = Path.Combine("uploads", "projects", request.ProjectId.ToString(), uniqueFileName);
+        var relativePath = Path.Combine(
+            "uploads",
+            "projects",
+            request.ProjectId.ToString(),
+            uniqueFileName);
 
-        // Создаем документ через конструктор
         var document = Document.Create(
             Guid.CreateVersion7(),
             request.FileName,
@@ -55,29 +60,25 @@ public class DocumentService(
             request.FileSize,
             request.ProjectId);
 
-        // Сохраняем
         await UnitOfWork.DocumentRepository.CreateAsync(document);
         await UnitOfWork.SaveChangesAsync();
 
-        // Генерируем URL для скачивания
-        var baseUrl = GetBaseUrl();
-        return document.ToResponseDto(baseUrl);
+        return document.ToResponseDto(GetBaseUrl());
     }
 
     public async Task DeleteAsync(Guid id)
     {
         var document = await UnitOfWork.DocumentRepository.GetByIdAsync(id);
         if (document == null)
-            throw new DomainException("Документ не найден");
+            throw new DomainException(
+                "Документ не найден",
+                "DOCUMENT_NOT_FOUND"
+            );
 
-        // Удаляем физический файл
         var fullPath = Path.Combine(_dataRootPath, document.FilePath);
         if (File.Exists(fullPath))
-        {
             File.Delete(fullPath);
-        }
 
-        // Удаляем из БД
         await UnitOfWork.DocumentRepository.DeleteAsync(document);
         await UnitOfWork.SaveChangesAsync();
     }
@@ -85,51 +86,67 @@ public class DocumentService(
     public async Task<IEnumerable<DocumentResponseDto>> GetByProjectAsync(Guid projectId)
     {
         var documents = await UnitOfWork.DocumentRepository.GetByProjectIdAsync(projectId);
-        var baseUrl = GetBaseUrl();
-        return documents.ToResponseDtos(baseUrl);
+        return documents.ToResponseDtos(GetBaseUrl());
     }
 
     public async Task<DocumentResponseDto> GetByIdAsync(Guid id)
     {
         var document = await UnitOfWork.DocumentRepository.GetByIdAsync(id);
         if (document == null)
-            throw new DomainException("Документ не найден");
+            throw new DomainException(
+                "Документ не найден",
+                "DOCUMENT_NOT_FOUND"
+            );
 
-        var baseUrl = GetBaseUrl();
-        return document.ToResponseDto(baseUrl);
+        return document.ToResponseDto(GetBaseUrl());
     }
 
     public async Task<FileStream> DownloadAsync(Guid id)
     {
         var document = await UnitOfWork.DocumentRepository.GetByIdAsync(id);
         if (document == null)
-            throw new DomainException("Документ не найден");
+            throw new DomainException(
+                "Документ не найден",
+                "DOCUMENT_NOT_FOUND"
+            );
 
         var fullPath = Path.Combine(_dataRootPath, document.FilePath);
         if (!File.Exists(fullPath))
-            throw new DomainException("Физический файл не найден");
+            throw new DomainException(
+                "Физический файл не найден",
+                "DOCUMENT_FILE_MISSING"
+            );
 
         return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
     }
 
     private void ValidateFile(UploadDocumentDto request)
     {
-        const long maxFileSize = 50 * 1024 * 1024; // 50 MB
+        const long maxFileSize = 50 * 1024 * 1024;
         if (request.FileSize > maxFileSize)
-            throw new DomainException($"Файл слишком большой. Максимум: {maxFileSize / 1024 / 1024} MB");
+            throw new DomainException(
+                "Файл слишком большой",
+                "DOCUMENT_FILE_TOO_LARGE"
+            );
 
-        var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt" };
+        var allowedExtensions = new[]
+        {
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"
+        };
+
         var extension = Path.GetExtension(request.FileName).ToLowerInvariant();
-
         if (!allowedExtensions.Contains(extension))
-            throw new DomainException($"Недопустимое расширение. Разрешены: {string.Join(", ", allowedExtensions)}");
+            throw new DomainException(
+                "Недопустимое расширение файла",
+                "DOCUMENT_EXTENSION_NOT_ALLOWED"
+            );
     }
 
     private string GetBaseUrl()
     {
         var request = HttpContextAccessor.HttpContext?.Request;
-        if (request == null) return string.Empty;
-
-        return $"{request.Scheme}://{request.Host}";
+        return request == null
+            ? string.Empty
+            : $"{request.Scheme}://{request.Host}";
     }
 }
