@@ -17,7 +17,7 @@ public static class CorsExtensions
             options.AddPolicy("Frontend", policy =>
             {
                 policy
-                    .WithOrigins(allowedOrigins)
+                    .WithOrigins(allowedOrigins ?? new[] { "http://localhost:5173" })
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

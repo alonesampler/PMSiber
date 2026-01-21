@@ -47,7 +47,7 @@ const ProjectList = () => {
 
     try {
       await ProjectsApi.delete(id);
-      await loadProjects(); // Перезагружаем список
+      await loadProjects();
     } catch (error: any) {
       console.error("Delete failed:", error);
       alert(error?.response?.data?.message || "Ошибка при удалении проекта");
