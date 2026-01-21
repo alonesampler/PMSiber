@@ -1,38 +1,71 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PMS.Api.Contracts;
 using PMS.Domain.Abstractions;
 using System.Text.Json;
 
 namespace PMS.Api.Middlewares;
 
-public sealed class ExceptionHandlingMiddleware(RequestDelegate next)
+public sealed class ExceptionHandlingMiddleware
 {
-    public async Task Invoke(HttpContext context)
+    private readonly RequestDelegate _next;
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public ExceptionHandlingMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task Invoke(HttpContext context, IWebHostEnvironment environment)
     {
         try
         {
-            await next(context);
+            await _next(context);
         }
         catch (DomainException ex)
         {
-            context.Response.StatusCode = MapStatusCode(ex.ErrorCode);
-            context.Response.ContentType = "application/json";
-
-            var payload = new ErrorResponse(ex.ErrorCode, ex.Message);
-            await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+            await HandleDomainExceptionAsync(context, ex);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            context.Response.ContentType = "application/json";
-
-            var payload = new ErrorResponse(
-                "INTERNAL_ERROR",
-                "Внутренняя ошибка сервера"
-            );
-
-            await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+            await HandleSystemExceptionAsync(context, ex, environment);
         }
+    }
+
+    private static async Task HandleDomainExceptionAsync(HttpContext context, DomainException ex)
+    {
+        context.Response.StatusCode = MapStatusCode(ex.ErrorCode);
+        context.Response.ContentType = "application/json";
+
+        var payload = new ErrorResponse(ex.ErrorCode, ex.Message);
+        await context.Response.WriteAsync(JsonSerializer.Serialize(payload, JsonOptions));
+    }
+
+    private static async Task HandleSystemExceptionAsync(
+        HttpContext context,
+        Exception ex,
+        IWebHostEnvironment environment)
+    {
+        // Логирование
+        var logger = context.RequestServices.GetService<ILogger<ExceptionHandlingMiddleware>>();
+        logger?.LogError(ex, "Unhandled exception");
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var message = environment.IsDevelopment()
+            ? ex.Message
+            : "Внутренняя ошибка сервера";
+
+        var payload = new ErrorResponse("INTERNAL_ERROR", message);
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(payload, JsonOptions));
     }
 
     private static int MapStatusCode(string code)

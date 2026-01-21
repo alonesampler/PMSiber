@@ -9,44 +9,72 @@ namespace PMS.Api.Controllers;
 public class EmployeesController(IEmployeeService EmployeeService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EmployeeResponseDto>>> GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        var employees = await EmployeeService.GetAllAsync();
-        return Ok(employees);
+        var result = await EmployeeService.GetAllAsync();
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
+        return Ok(result.Value);
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<EmployeeResponseDto>>> Search([FromQuery] string? query)
+    public async Task<IActionResult> Search([FromQuery] string? query)
     {
-        var employees = await EmployeeService.SearchAsync(query);
-        return Ok(employees);
+        var result = await EmployeeService.SearchAsync(query);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
+        return Ok(result.Value);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<EmployeeResponseDto>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var employee = await EmployeeService.GetByIdAsync(id);
-        return Ok(employee);
+        var result = await EmployeeService.GetByIdAsync(id);
+
+        if (result.IsFailed)
+            return NotFound(result.Errors);
+
+        return Ok(result.Value);
     }
 
     [HttpPost]
-    public async Task<ActionResult<EmployeeResponseDto>> Create([FromBody] EmployeeParamsDto dto)
+    public async Task<IActionResult> Create([FromBody] EmployeeParamsDto dto)
     {
-        var created = await EmployeeService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var result = await EmployeeService.CreateAsync(dto);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Value.Id },
+            result.Value
+        );
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] EmployeeParamsDto dto)
     {
-        await EmployeeService.UpdateAsync(id, dto);
+        var result = await EmployeeService.UpdateAsync(id, dto);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await EmployeeService.DeleteAsync(id);
+        var result = await EmployeeService.DeleteAsync(id);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
         return NoContent();
     }
 }

@@ -9,44 +9,67 @@ namespace PMS.Api.Controllers;
 public class ProjectsController(IProjectService ProjectService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProjectResponseDto>>> GetAll(
+    public async Task<IActionResult> GetAll(
         [FromQuery] string? name = null,
         [FromQuery] string? customerCompanyName = null,
         [FromQuery] string? executorCompanyName = null,
         [FromQuery] DateTime? startDateFrom = null,
         [FromQuery] DateTime? startDateTo = null)
     {
-        var projects = await ProjectService.GetAllWithFiltersAsync(
+        var result = await ProjectService.GetAllWithFiltersAsync(
             name, customerCompanyName, executorCompanyName, startDateFrom, startDateTo);
 
-        return Ok(projects);
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
+        return Ok(result.Value);
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<ProjectResponseDto>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var project = await ProjectService.GetByIdAsync(id);
-        return Ok(project);
+        var result = await ProjectService.GetByIdAsync(id);
+
+        if (result.IsFailed)
+            return NotFound(result.Errors);
+
+        return Ok(result.Value);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProjectResponseDto>> Create([FromBody] ProjectUpsertDto dto)
+    public async Task<IActionResult> Create([FromBody] ProjectUpsertDto dto)
     {
-        var created = await ProjectService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var result = await ProjectService.CreateAsync(dto);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Value.Id },
+            result.Value
+        );
     }
 
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] ProjectUpsertDto dto)
     {
-        await ProjectService.UpdateAsync(id, dto);
+        var result = await ProjectService.UpdateAsync(id, dto);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await ProjectService.DeleteAsync(id);
+        var result = await ProjectService.DeleteAsync(id);
+
+        if (result.IsFailed)
+            return BadRequest(result.Errors);
+
         return NoContent();
     }
 }

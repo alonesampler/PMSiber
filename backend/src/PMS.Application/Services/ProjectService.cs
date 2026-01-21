@@ -1,44 +1,33 @@
-﻿using PMS.Application.DTOs.Projects;
+﻿using FluentResults;
+using PMS.Application.DTOs.Projects;
 using PMS.Application.Factories;
 using PMS.Application.Interfaces;
-using PMS.Domain.Abstractions;
 using PMS.Domain.Entities;
 using PMS.Domain.Interfaces;
+using PMS.Domain.Errors;
 
 namespace PMS.Application.Services;
 
 public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
 {
-    public async Task<ProjectResponseDto> CreateAsync(ProjectUpsertDto dto)
+    public async Task<Result<ProjectResponseDto>> CreateAsync(ProjectUpsertDto dto)
     {
         if (dto.Params.StartDate >= dto.Params.EndDate)
-            throw new DomainException(
-                "Дата начала должна быть раньше даты окончания",
-                "PROJECT_DATE_RANGE_INVALID"
-            );
+            return Result.Fail(AppError.InvalidDates);
 
         var manager = await UnitOfWork.EmployeeRepository.GetByIdAsync(dto.ManagerId);
         if (manager == null)
-            throw new DomainException(
-                "Менеджер не найден",
-                "PROJECT_MANAGER_NOT_FOUND"
-            );
+            return Result.Fail(AppError.ManagerNotFound);
 
         if (dto.EmployeesIds.Contains(dto.ManagerId))
-            throw new DomainException(
-                "Менеджер не может быть в списке исполнителей",
-                "PROJECT_MANAGER_AS_EMPLOYEE"
-            );
+            return Result.Fail(AppError.ManagerInEmployees);
 
         var employees = new List<Employee>();
         foreach (var employeeId in dto.EmployeesIds)
         {
             var employee = await UnitOfWork.EmployeeRepository.GetByIdAsync(employeeId);
             if (employee == null)
-                throw new DomainException(
-                    $"Сотрудник с ID {employeeId} не найден",
-                    "EMPLOYEE_NOT_FOUND"
-                );
+                return Result.Fail(AppError.EmployeeNotFoundById(employeeId));
 
             employees.Add(employee);
         }
@@ -61,22 +50,19 @@ public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
         await UnitOfWork.ProjectRepository.CreateAsync(project);
         await UnitOfWork.SaveChangesAsync();
 
-        return project.ToResponseDto();
+        return Result.Ok(project.ToResponseDto());
     }
 
-    public async Task<ProjectResponseDto> GetByIdAsync(Guid id)
+    public async Task<Result<ProjectResponseDto>> GetByIdAsync(Guid id)
     {
         var project = await UnitOfWork.ProjectRepository.GetByIdAsync(id);
         if (project == null)
-            throw new DomainException(
-                "Проект не найден",
-                "PROJECT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.ProjectNotFound);
 
-        return project.ToResponseDto();
+        return Result.Ok(project.ToResponseDto());
     }
 
-    public async Task<List<ProjectResponseDto>> GetAllWithFiltersAsync(
+    public async Task<Result<List<ProjectResponseDto>>> GetAllWithFiltersAsync(
         string? name = null,
         string? customerCompanyName = null,
         string? executorCompanyName = null,
@@ -86,46 +72,31 @@ public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
         var projects = await UnitOfWork.ProjectRepository.GetAllWithFiltersAsync(
             name, customerCompanyName, executorCompanyName, startDateFrom, startDateTo);
 
-        return projects.Select(p => p.ToResponseDto()).ToList();
+        return Result.Ok(projects.Select(p => p.ToResponseDto()).ToList());
     }
 
-    public async Task UpdateAsync(Guid id, ProjectUpsertDto dto)
+    public async Task<Result> UpdateAsync(Guid id, ProjectUpsertDto dto)
     {
         var project = await UnitOfWork.ProjectRepository.GetByIdAsync(id);
         if (project == null)
-            throw new DomainException(
-                "Проект не найден",
-                "PROJECT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.ProjectNotFound);
 
         if (dto.Params.StartDate >= dto.Params.EndDate)
-            throw new DomainException(
-                "Дата начала должна быть раньше даты окончания",
-                "PROJECT_DATE_RANGE_INVALID"
-            );
+            return Result.Fail(AppError.InvalidDates);
 
         var manager = await UnitOfWork.EmployeeRepository.GetByIdAsync(dto.ManagerId);
         if (manager == null)
-            throw new DomainException(
-                "Менеджер не найден",
-                "PROJECT_MANAGER_NOT_FOUND"
-            );
+            return Result.Fail(AppError.ManagerNotFound);
 
         if (dto.EmployeesIds.Contains(dto.ManagerId))
-            throw new DomainException(
-                "Менеджер не может быть в списке исполнителей",
-                "PROJECT_MANAGER_AS_EMPLOYEE"
-            );
+            return Result.Fail(AppError.ManagerInEmployees);
 
         var employees = new List<Employee>();
         foreach (var employeeId in dto.EmployeesIds)
         {
             var employee = await UnitOfWork.EmployeeRepository.GetByIdAsync(employeeId);
             if (employee == null)
-                throw new DomainException(
-                    $"Сотрудник с ID {employeeId} не найден",
-                    "EMPLOYEE_NOT_FOUND"
-                );
+                return Result.Fail(AppError.EmployeeNotFoundById(employeeId));
 
             employees.Add(employee);
         }
@@ -146,25 +117,23 @@ public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
 
         await UnitOfWork.ProjectRepository.UpdateAsync(project);
         await UnitOfWork.SaveChangesAsync();
+
+        return Result.Ok();
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(Guid id)
     {
         var project = await UnitOfWork.ProjectRepository.GetByIdAsync(id);
         if (project == null)
-            throw new DomainException(
-                "Проект не найден",
-                "PROJECT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.ProjectNotFound);
 
         if (project.Documents.Any())
-            throw new DomainException(
-                "Нельзя удалить проект с документами",
-                "PROJECT_HAS_DOCUMENTS"
-            );
+            return Result.Fail(AppError.ProjectHasDocuments);
 
         await UnitOfWork.ProjectRepository.DeleteAsync(project);
         await UnitOfWork.SaveChangesAsync();
+
+        return Result.Ok();
     }
 
     private void SetPrivateProperty<T>(T obj, string propertyName, object value)

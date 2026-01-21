@@ -1,18 +1,19 @@
-﻿using PMS.Application.DTOs.Documents;
+﻿using FluentResults;
+using PMS.Application.DTOs.Documents;
 
 namespace PMS.Application.Interfaces;
 
 public interface IDocumentService
 {
-    Task<DocumentResponseDto> UploadAsync(
+    Task<Result<DocumentResponseDto>> UploadAsync(
         UploadDocumentDto request,
         Stream fileStream);
 
-    Task DeleteAsync(Guid id);
+    Task<Result> DeleteAsync(Guid id);
 
-    Task<DocumentResponseDto> GetByIdAsync(Guid id);
+    Task<Result<DocumentResponseDto>> GetByIdAsync(Guid id);
 
-    Task<IEnumerable<DocumentResponseDto>> GetByProjectAsync(Guid projectId);
+    Task<Result<IEnumerable<DocumentResponseDto>>> GetByProjectAsync(Guid projectId);
 
-    Task<FileStream> DownloadAsync(Guid id);
+    Task<Result<FileStream>> DownloadAsync(Guid id);
 }

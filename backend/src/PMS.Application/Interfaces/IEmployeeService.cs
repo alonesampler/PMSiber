@@ -1,13 +1,14 @@
-﻿using PMS.Application.DTOs.Employees;
+﻿using FluentResults;
+using PMS.Application.DTOs.Employees;
 
 namespace PMS.Application.Interfaces;
 
 public interface IEmployeeService
 {
-    Task<EmployeeResponseDto?> GetByIdAsync(Guid id);
-    Task<IEnumerable<EmployeeResponseDto>> GetAllAsync();
-    Task<IEnumerable<EmployeeResponseDto>> SearchAsync(string? query);
-    Task<EmployeeResponseDto> CreateAsync(EmployeeParamsDto dto);
-    Task UpdateAsync(Guid id, EmployeeParamsDto dto);
-    Task DeleteAsync(Guid id);
+    Task<Result<EmployeeResponseDto?>> GetByIdAsync(Guid id);
+    Task<Result<IEnumerable<EmployeeResponseDto>>> GetAllAsync();
+    Task<Result<IEnumerable<EmployeeResponseDto>>> SearchAsync(string? query);
+    Task<Result<EmployeeResponseDto>> CreateAsync(EmployeeParamsDto dto);
+    Task<Result> UpdateAsync(Guid id, EmployeeParamsDto dto);
+    Task<Result> DeleteAsync(Guid id);
 }

@@ -8,8 +8,8 @@ public static class MiddlewareExtensions
     public static IApplicationBuilder UseApiMiddlewares(this IApplicationBuilder app)
     {
         app.UseMiddleware<ExceptionHandlingMiddleware>();
-        app.UseMiddleware<RequestLoggingMiddleware>(); // if needed log requests
-        app.UseMiddleware<PerformanceMiddleware>(); // if needed metrix
+        app.UseMiddleware<RequestLoggingMiddleware>();
+        app.UseMiddleware<PerformanceMiddleware>();
 
         return app;
     }

@@ -1,24 +1,25 @@
-﻿using PMS.Application.DTOs.Projects;
+﻿using FluentResults;
+using PMS.Application.DTOs.Projects;
 
 namespace PMS.Application.Interfaces;
 
 public interface IProjectService
 {
-    Task<ProjectResponseDto> CreateAsync(
+    Task<Result<ProjectResponseDto>> CreateAsync(
         ProjectUpsertDto dto);
 
-    Task<ProjectResponseDto> GetByIdAsync(Guid id);
+    Task<Result<ProjectResponseDto>> GetByIdAsync(Guid id);
 
-    Task<List<ProjectResponseDto>> GetAllWithFiltersAsync(
+    Task<Result<List<ProjectResponseDto>>> GetAllWithFiltersAsync(
         string? name = null,
         string? customerCompanyName = null,
         string? executorCompanyName = null,
         DateTime? startDateFrom = null,
         DateTime? startDateTo = null);
 
-    Task UpdateAsync(
+    Task<Result> UpdateAsync(
         Guid id,
         ProjectUpsertDto dto);
 
-    Task DeleteAsync(Guid id);
+    Task<Result> DeleteAsync(Guid id);
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PMS.Api.Extensions;
+using PMS.Api.Filters;
 using PMS.Application;
 using PMS.Infrastructure;
 using System.Text.Json;
@@ -13,13 +14,15 @@ builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 // configure controllers and JSON options
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
-    });
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ResultActionFilter>();
+}).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
+});
 
 // configure layers
 builder.Services.AddApplication(builder.Configuration);
@@ -39,20 +42,17 @@ var app = builder.Build();
 // conver Middleware
 app.UseApiMiddlewares();
 
-// development
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PMS API v1");
-        options.RoutePrefix = "api-docs";
-        options.DocumentTitle = "PMS API Documentation";
-    });
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "PMS API v1");
+    options.RoutePrefix = "api-docs";
+    options.DocumentTitle = "PMS API Documentation";
+});
 
-    // other dev-specific middleware
-    app.UseDeveloperExceptionPage();
-}
+// other dev-specific middleware
+app.UseDeveloperExceptionPage();
+
 
 // production
 if (app.Environment.IsProduction())

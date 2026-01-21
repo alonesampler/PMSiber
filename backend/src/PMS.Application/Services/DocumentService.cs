@@ -1,35 +1,34 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+﻿using FluentResults;
+using Microsoft.AspNetCore.Http;
 using PMS.Application.DTOs.Documents;
 using PMS.Application.Factories;
 using PMS.Application.Interfaces;
-using PMS.Domain.Abstractions;
 using PMS.Domain.Entities;
 using PMS.Domain.Interfaces;
+using PMS.Domain.Errors;
 
 namespace PMS.Application.Services;
 
 public class DocumentService(
     IUnitOfWork UnitOfWork,
-    IHttpContextAccessor HttpContextAccessor,
-    IConfiguration Configuration) : IDocumentService
+    IHttpContextAccessor HttpContextAccessor
+) : IDocumentService
 {
     private readonly string _dataRootPath = Path.GetFullPath(Path.Combine(
         Directory.GetCurrentDirectory(),
         "..", "..", "..", "data"));
 
-    public async Task<DocumentResponseDto> UploadAsync(
+    public async Task<Result<DocumentResponseDto>> UploadAsync(
         UploadDocumentDto request,
         Stream fileStream)
     {
         var project = await UnitOfWork.ProjectRepository.GetByIdAsync(request.ProjectId);
         if (project == null)
-            throw new DomainException(
-                "Проект не найден",
-                "PROJECT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.ProjectNotFoundForDocument);
 
-        ValidateFile(request);
+        var validation = ValidateFile(request);
+        if (validation.IsFailed)
+            return validation.ToResult<DocumentResponseDto>();
 
         var projectFolder = Path.Combine(
             _dataRootPath,
@@ -63,17 +62,14 @@ public class DocumentService(
         await UnitOfWork.DocumentRepository.CreateAsync(document);
         await UnitOfWork.SaveChangesAsync();
 
-        return document.ToResponseDto(GetBaseUrl());
+        return Result.Ok(document.ToResponseDto(GetBaseUrl()));
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task<Result> DeleteAsync(Guid id)
     {
         var document = await UnitOfWork.DocumentRepository.GetByIdAsync(id);
         if (document == null)
-            throw new DomainException(
-                "Документ не найден",
-                "DOCUMENT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.DocumentNotFound);
 
         var fullPath = Path.Combine(_dataRootPath, document.FilePath);
         if (File.Exists(fullPath))
@@ -81,53 +77,49 @@ public class DocumentService(
 
         await UnitOfWork.DocumentRepository.DeleteAsync(document);
         await UnitOfWork.SaveChangesAsync();
+
+        return Result.Ok();
     }
 
-    public async Task<IEnumerable<DocumentResponseDto>> GetByProjectAsync(Guid projectId)
+    public async Task<Result<IEnumerable<DocumentResponseDto>>> GetByProjectAsync(Guid projectId)
     {
         var documents = await UnitOfWork.DocumentRepository.GetByProjectIdAsync(projectId);
-        return documents.ToResponseDtos(GetBaseUrl());
+        return Result.Ok(documents.ToResponseDtos(GetBaseUrl()));
     }
 
-    public async Task<DocumentResponseDto> GetByIdAsync(Guid id)
+    public async Task<Result<DocumentResponseDto>> GetByIdAsync(Guid id)
     {
         var document = await UnitOfWork.DocumentRepository.GetByIdAsync(id);
         if (document == null)
-            throw new DomainException(
-                "Документ не найден",
-                "DOCUMENT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.DocumentNotFound);
 
-        return document.ToResponseDto(GetBaseUrl());
+        return Result.Ok(document.ToResponseDto(GetBaseUrl()));
     }
 
-    public async Task<FileStream> DownloadAsync(Guid id)
+    public async Task<Result<FileStream>> DownloadAsync(Guid id)
     {
         var document = await UnitOfWork.DocumentRepository.GetByIdAsync(id);
         if (document == null)
-            throw new DomainException(
-                "Документ не найден",
-                "DOCUMENT_NOT_FOUND"
-            );
+            return Result.Fail(AppError.DocumentNotFound);
 
         var fullPath = Path.Combine(_dataRootPath, document.FilePath);
         if (!File.Exists(fullPath))
-            throw new DomainException(
-                "Физический файл не найден",
-                "DOCUMENT_FILE_MISSING"
-            );
+            return Result.Fail(AppError.FileMissing);
 
-        return new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var stream = new FileStream(
+            fullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read);
+
+        return Result.Ok(stream);
     }
 
-    private void ValidateFile(UploadDocumentDto request)
+    private Result ValidateFile(UploadDocumentDto request)
     {
         const long maxFileSize = 50 * 1024 * 1024;
         if (request.FileSize > maxFileSize)
-            throw new DomainException(
-                "Файл слишком большой",
-                "DOCUMENT_FILE_TOO_LARGE"
-            );
+            return Result.Fail(AppError.FileTooLarge);
 
         var allowedExtensions = new[]
         {
@@ -136,10 +128,9 @@ public class DocumentService(
 
         var extension = Path.GetExtension(request.FileName).ToLowerInvariant();
         if (!allowedExtensions.Contains(extension))
-            throw new DomainException(
-                "Недопустимое расширение файла",
-                "DOCUMENT_EXTENSION_NOT_ALLOWED"
-            );
+            return Result.Fail(AppError.InvalidExtension);
+
+        return Result.Ok();
     }
 
     private string GetBaseUrl()
