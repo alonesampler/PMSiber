@@ -37,6 +37,8 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+AutoMigrator.ApplyMigrations(app);
+
 app.UseApiMiddlewares();
 
 app.UseSwagger();
@@ -50,7 +52,10 @@ if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 
+app.UseRouting();
+
 app.UseCors("Frontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -58,5 +63,3 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
-
-AutoMigrator.ApplyMigrations(app);
