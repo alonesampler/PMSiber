@@ -20,7 +20,7 @@ const Step3Manager = ({ draft, setDraft }: Props) => {
   };
 
   return (
-    <div className="panel">
+    <div className="employee-search-container">
       <div className="sub" style={{ marginBottom: 8 }}>
         Вводи фамилию/имя/отчество/почту — дергаем /employees/search
       </div>
@@ -40,14 +40,24 @@ const Step3Manager = ({ draft, setDraft }: Props) => {
           : "Введите хотя бы 1 символ"}
       </div>
 
-      <div className="spacer" />
-
-      <div className="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
-        {employees.slice(0, 8).map((e) => (
-          <button key={e.id} className="btn" onClick={() => pick(e)}>
-            {format(e)}
-          </button>
-        ))}
+      <div className="employee-search-results">
+        <div className="employee-grid">
+          {employees.slice(0, 8).map((e) => (
+            <div 
+              key={e.id} 
+              className={`employee-card ${draft.managerId === e.id ? 'selected' : ''}`}
+              onClick={() => pick(e)}
+            >
+              <div className="employee-info">
+                <div className="employee-name">{formatName(e)}</div>
+                <div className="employee-email">{e.email}</div>
+              </div>
+              <div className="employee-status">
+                {draft.managerId === e.id ? "Выбран менеджером" : "Нажмите для выбора"}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="spacer" />
@@ -60,12 +70,16 @@ const Step3Manager = ({ draft, setDraft }: Props) => {
   );
 };
 
-export default Step3Manager;
+function formatName(e: EmployeeResponseDto) {
+  return `${e.lastName} ${e.firstName}${e.middleName ? " " + e.middleName : ""}`;
+}
 
 function format(e: EmployeeResponseDto) {
-  return `${e.lastName} ${e.firstName}${e.middleName ? " " + e.middleName : ""} — ${e.email}`;
+  return `${formatName(e)} — ${e.email}`;
 }
 
 function shortId(id: string) {
   return id.length > 10 ? `${id.slice(0, 8)}...` : id;
 }
+
+export default Step3Manager;

@@ -1,151 +1,398 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { EmployeesApi } from "../../../api/employees.api";
-import type { ProjectDraftDto } from "../../../types/project.types";
+import type { ProjectFormData } from "../../../types/project.types";
 import type { EmployeeResponseDto } from "../../../types/employee.types";
 
 type Props = {
-  formData: ProjectDraftDto;
-  onChange: (data: ProjectDraftDto) => void;
+  formData: ProjectFormData;
+  onChange: (data: ProjectFormData) => void;
 };
 
 const ProjectEditForm = ({ formData, onChange }: Props) => {
-  const [employees, setEmployees] = useState<EmployeeResponseDto[]>([]);
-  const [query, setQuery] = useState("");
+  // Состояния для менеджера
+  const [managerQuery, setManagerQuery] = useState("");
+  const [managerResults, setManagerResults] = useState<EmployeeResponseDto[]>([]);
+  const [managerLoading, setManagerLoading] = useState(false);
+  const [selectedManager, setSelectedManager] = useState<EmployeeResponseDto | null>(null);
 
+  // Состояния для команды
+  const [teamQuery, setTeamQuery] = useState("");
+  const [allEmployees, setAllEmployees] = useState<EmployeeResponseDto[]>([]);
+  const [teamFiltered, setTeamFiltered] = useState<EmployeeResponseDto[]>([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+
+  // Загружаем всех сотрудников при монтировании (для команды)
   useEffect(() => {
-    EmployeesApi.getAll().then(setEmployees);
+    loadAllEmployees();
   }, []);
 
-  const search = async (q: string) => {
-    setQuery(q);
-    if (!q.trim()) {
-      setEmployees(await EmployeesApi.getAll());
+  // Загружаем менеджера при изменении ID
+  useEffect(() => {
+    if (formData.managerId && allEmployees.length > 0) {
+      const manager = allEmployees.find(e => e.id === formData.managerId);
+      setSelectedManager(manager || null);
     } else {
-      setEmployees(await EmployeesApi.search(q));
+      setSelectedManager(null);
+    }
+  }, [formData.managerId, allEmployees]);
+
+  // Фильтруем сотрудников для команды при изменении запроса
+  useEffect(() => {
+    if (!teamQuery.trim()) {
+      setTeamFiltered(allEmployees.filter(emp => emp.id !== formData.managerId));
+    } else {
+      const query = teamQuery.toLowerCase();
+      const filtered = allEmployees.filter(emp => {
+        const fullName = `${emp.lastName} ${emp.firstName} ${emp.middleName || ''}`.toLowerCase();
+        const matchesSearch = fullName.includes(query) || emp.email.toLowerCase().includes(query);
+        const notManager = emp.id !== formData.managerId;
+        return matchesSearch && notManager;
+      });
+      setTeamFiltered(filtered);
+    }
+  }, [teamQuery, allEmployees, formData.managerId]);
+
+  const loadAllEmployees = async () => {
+    setTeamLoading(true);
+    try {
+      const allEmployees = await EmployeesApi.getAll();
+      setAllEmployees(allEmployees);
+      setTeamFiltered(allEmployees.filter(emp => emp.id !== formData.managerId));
+    } catch (error) {
+      console.error("Failed to load employees:", error);
+      alert("Ошибка при загрузке сотрудников");
+    } finally {
+      setTeamLoading(false);
     }
   };
 
+  const handleSearchManager = useCallback(async (searchQuery: string) => {
+    setManagerQuery(searchQuery);
+    
+    if (!searchQuery.trim()) {
+      setManagerResults([]);
+      return;
+    }
+
+    setManagerLoading(true);
+    try {
+      const results = await EmployeesApi.search(searchQuery);
+      // Исключаем текущего менеджера из результатов
+      const filteredResults = results.filter(emp => emp.id !== formData.managerId);
+      setManagerResults(filteredResults);
+    } catch (error) {
+      console.error("Search failed:", error);
+    } finally {
+      setManagerLoading(false);
+    }
+  }, [formData.managerId]);
+
+  const handleSelectManager = (employee: EmployeeResponseDto) => {
+    onChange({ ...formData, managerId: employee.id });
+    
+    // Убираем выбранного менеджера из команды, если он там был
+    const newEmployeesIds = formData.employeesIds.filter(id => id !== employee.id);
+    onChange({ ...formData, managerId: employee.id, employeesIds: newEmployeesIds });
+    
+    // Сбрасываем поиск менеджера
+    setManagerQuery("");
+    setManagerResults([]);
+  };
+
+  const handleToggleEmployee = (employeeId: string) => {
+    const isSelected = formData.employeesIds.includes(employeeId);
+    const newEmployeesIds = isSelected
+      ? formData.employeesIds.filter(id => id !== employeeId)
+      : [...formData.employeesIds, employeeId];
+    
+    onChange({ ...formData, employeesIds: newEmployeesIds });
+  };
+
+  const formatEmployeeName = (employee: EmployeeResponseDto) => {
+    return `${employee.lastName} ${employee.firstName}${employee.middleName ? ` ${employee.middleName}` : ''}`;
+  };
+
+  const clearTeam = () => {
+    onChange({ ...formData, employeesIds: [] });
+  };
+
   return (
-    <div className="panel">
-      <h3 className="h3">Проект</h3>
+    <div className="space-y-6">
+      {/* Основные поля проекта */}
+      <div className="edit-form-section">
+        <h2 className="h2">Основная информация</h2>
+        
+        <div className="space-y-6">
+          <div className="form-field">
+            <label className="required-field">Название проекта</label>
+            <input
+              type="text"
+              className="input"
+              placeholder="Введите название проекта"
+              value={formData.params.name}
+              onChange={e => onChange({
+                ...formData,
+                params: { ...formData.params, name: e.target.value }
+              })}
+              required
+            />
+          </div>
 
-      <input
-        className="input"
-        placeholder="Название"
-        value={formData.params.name}
-        onChange={e =>
-          onChange({
-            ...formData,
-            params: { ...formData.params, name: e.target.value },
-          })
-        }
-      />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="form-field">
+              <label className="required-field">Дата начала</label>
+              <input
+                type="date"
+                className="input"
+                value={formData.params.startDate}
+                onChange={e => onChange({
+                  ...formData,
+                  params: { ...formData.params, startDate: e.target.value }
+                })}
+                required
+              />
+            </div>
+            
+            <div className="form-field">
+              <label className="required-field">Дата окончания</label>
+              <input
+                type="date"
+                className="input"
+                value={formData.params.endDate}
+                min={formData.params.startDate}
+                onChange={e => onChange({
+                  ...formData,
+                  params: { ...formData.params, endDate: e.target.value }
+                })}
+                required
+              />
+            </div>
+          </div>
 
-      <div className="row">
-        <input
-          type="date"
-          className="input"
-          value={formData.params.startDate}
-          onChange={e =>
-            onChange({
-              ...formData,
-              params: { ...formData.params, startDate: e.target.value },
-            })
-          }
-        />
+          <div className="form-field">
+            <label>
+              Приоритет: <span className="font-bold">{formData.params.priority}/10</span>
+            </label>
+            <div className="range-slider-container">
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={formData.params.priority}
+                onChange={e => onChange({
+                  ...formData,
+                  params: { ...formData.params, priority: parseInt(e.target.value) }
+                })}
+                className="range-slider"
+              />
+              <div className="range-labels">
+                <span>Низкий</span>
+                <span>Средний</span>
+                <span>Высокий</span>
+              </div>
+            </div>
+          </div>
 
-        <input
-          type="date"
-          className="input"
-          value={formData.params.endDate}
-          onChange={e =>
-            onChange({
-              ...formData,
-              params: { ...formData.params, endDate: e.target.value },
-            })
-          }
-        />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="form-field">
+              <label className="required-field">Компания-заказчик</label>
+              <input
+                type="text"
+                className="input"
+                placeholder="Введите название компании"
+                value={formData.params.customerCompanyName}
+                onChange={e => onChange({
+                  ...formData,
+                  params: { ...formData.params, customerCompanyName: e.target.value }
+                })}
+                required
+              />
+            </div>
+            
+            <div className="form-field">
+              <label className="required-field">Компания-исполнитель</label>
+              <input
+                type="text"
+                className="input"
+                placeholder="Введите название компании"
+                value={formData.params.executorCompanyName}
+                onChange={e => onChange({
+                  ...formData,
+                  params: { ...formData.params, executorCompanyName: e.target.value }
+                })}
+                required
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <input
-        className="input"
-        placeholder="Компания-заказчик"
-        value={formData.params.customerCompanyName}
-        onChange={e =>
-          onChange({
-            ...formData,
-            params: { ...formData.params, customerCompanyName: e.target.value },
-          })
-        }
-      />
-
-      <input
-        className="input"
-        placeholder="Компания-исполнитель"
-        value={formData.params.executorCompanyName}
-        onChange={e =>
-          onChange({
-            ...formData,
-            params: { ...formData.params, executorCompanyName: e.target.value },
-          })
-        }
-      />
-
-      <div className="spacer" />
-
-      <h3 className="h3">Менеджер</h3>
-
-      <input
-        className="input"
-        placeholder="Поиск сотрудника"
-        value={query}
-        onChange={e => search(e.target.value)}
-      />
-
-      {employees.slice(0, 5).map(e => (
-        <button
-          key={e.id}
-          className={`btn ${formData.managerId === e.id ? "btnPrimary" : ""}`}
-          onClick={() => onChange({ ...formData, managerId: e.id })}
-        >
-          {e.lastName} {e.firstName}
-        </button>
-      ))}
-
-      <div className="spacer" />
-
-      <h3 className="h3">Исполнители</h3>
-
-      {employees.slice(0, 8).map(e => {
-        const selected = formData.employeesIds.includes(e.id);
-        const isManager = e.id === formData.managerId;
-
-        return (
-          <div key={e.id} className="card">
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <div>
-                {e.lastName} {e.firstName}
-              </div>
-
-              {!isManager && (
-                <button
-                  className={`btn ${selected ? "danger" : "btnPrimary"}`}
-                  onClick={() =>
-                    onChange({
-                      ...formData,
-                      employeesIds: selected
-                        ? formData.employeesIds.filter(x => x !== e.id)
-                        : [...formData.employeesIds, e.id],
-                    })
-                  }
-                >
-                  {selected ? "Убрать" : "Добавить"}
-                </button>
+      {/* Выбор менеджера */}
+      <div className="edit-form-section">
+        <h2 className="h2">Менеджер проекта</h2>
+        
+        <div className="space-y-6">
+          <div className="employee-search-container">
+            <label className="required-field">Поиск менеджера *</label>
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                className="input"
+                placeholder="Поиск по имени, фамилии и..."
+                value={managerQuery}
+                onChange={e => handleSearchManager(e.target.value)}
+              />
+              {managerLoading && (
+                <div className="search-loading"></div>
               )}
             </div>
           </div>
-        );
-      })}
+
+          {/* Выбранный менеджер */}
+          {selectedManager && (
+            <div className="selected-manager-card">
+              <div className="selected-manager-info">
+                <div>
+                  <div className="manager-name">
+                    {formatEmployeeName(selectedManager)}
+                  </div>
+                  <div className="manager-email">
+                    {selectedManager.email}
+                  </div>
+                </div>
+                <span className="badge badge-primary">Менеджер</span>
+              </div>
+            </div>
+          )}
+
+          {/* Список сотрудников для выбора менеджера */}
+          {managerResults.length > 0 && (
+            <div className="manager-selection-list">
+              <div className="manager-selection-header">
+                <span className="text-sm font-medium">Выберите менеджера:</span>
+                <span className="text-xs text-gray-500">
+                  {managerResults.length} сотрудников
+                </span>
+              </div>
+              
+              <div className="manager-grid">
+                {managerResults.slice(0, 8).map(employee => (
+                  <button
+                    key={employee.id}
+                    type="button"
+                    className={`manager-option ${formData.managerId === employee.id ? 'selected' : ''}`}
+                    onClick={() => handleSelectManager(employee)}
+                    disabled={managerLoading}
+                  >
+                    <div className="manager-option-content">
+                      <div className="manager-option-name">
+                        {formatEmployeeName(employee)}
+                      </div>
+                      <div className="manager-option-email">
+                        {employee.email}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {managerQuery && managerResults.length === 0 && !managerLoading && (
+            <div className="empty-state">
+              Сотрудники не найдены
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Выбор исполнителей */}
+      <div className="edit-form-section">
+        <div className="team-header">
+          <h2 className="h2">Команда проекта</h2>
+          <div className="flex items-center gap-2">
+            <span className="selected-count">
+              Выбрано: <span className="font-bold">{formData.employeesIds.length}</span>
+            </span>
+            {formData.employeesIds.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-sm btnDanger clear-team-btn"
+                onClick={clearTeam}
+              >
+                Очистить
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="employees-search-container">
+            <label>Поиск исполнителей</label>
+            <input
+              type="text"
+              className="input"
+              placeholder="Поиск сотрудников..."
+              value={teamQuery}
+              onChange={e => setTeamQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Список исполнителей */}
+          {teamFiltered.length > 0 && (
+            <div className="team-members-grid">
+              {teamFiltered.map(employee => {
+                const isSelected = formData.employeesIds.includes(employee.id);
+                
+                return (
+                  <div
+                    key={employee.id}
+                    className="team-member-card"
+                  >
+                    <div className="team-member-info">
+                      <div className="team-member-name">
+                        {formatEmployeeName(employee)}
+                      </div>
+                      <div className="team-member-email">
+                        {employee.email}
+                      </div>
+                    </div>
+                    
+                    <div className="team-member-actions">
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${isSelected ? 'btnDanger' : 'btnPrimary'}`}
+                        onClick={() => handleToggleEmployee(employee.id)}
+                      >
+                        {isSelected ? "Убрать" : "Добавить"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {teamLoading && (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <div className="text-sm text-gray-500">Загрузка...</div>
+            </div>
+          )}
+
+          {!teamLoading && teamQuery && teamFiltered.length === 0 && (
+            <div className="empty-state">
+              Сотрудники не найдены
+            </div>
+          )}
+
+          {!teamLoading && !teamQuery && teamFiltered.length === 0 && allEmployees.length > 0 && (
+            <div className="empty-state">
+              Все сотрудники уже в команде или являются менеджером
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

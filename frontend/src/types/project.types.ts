@@ -64,3 +64,16 @@ export type ProjectDraftDto = {
   managerId: string;
   employeesIds: string[];
 };
+
+export type ProjectFormData = {
+  params: {
+    name: string;
+    customerCompanyName: string;
+    executorCompanyName: string;
+    startDate: string; // YYYY-MM-DD формат для input[type="date"]
+    endDate: string;   // YYYY-MM-DD формат для input[type="date"]
+    priority: number;
+  };
+  managerId: string;
+  employeesIds: string[];
+};

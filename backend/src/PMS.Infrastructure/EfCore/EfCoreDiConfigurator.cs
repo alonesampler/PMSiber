@@ -10,16 +10,16 @@ internal static class EfCoreDiConfigurator
 {
     internal static void ConnectDbContext(IServiceCollection services, IConfiguration configuration, string connectionString)
     {
-         services.AddDbContext<AppDbContext>(options =>
-         {
-             options.UseNpgsql(connectionString,
-                 x =>
-                 {
-                     x.MigrationsHistoryTable("__EFMigrationsHistory");
-                 });
-         });
+        services.AddDbContext<AppDbContext>(options =>
+        {
+            options.UseSqlServer(connectionString,
+                x =>
+                {
+                    x.MigrationsHistoryTable("__EFMigrationsHistory");
+                });
+        });
     }
-   
+
     internal static void AddRepositories(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IProjectRepository, ProjectRepository>();

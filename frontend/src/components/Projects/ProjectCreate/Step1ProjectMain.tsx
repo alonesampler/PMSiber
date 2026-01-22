@@ -11,7 +11,7 @@ const Step1ProjectMain = ({ draft, setDraft }: Props) => {
       <h2 className="h2">Основная информация</h2>
       <div className="spacer" />
       
-      <div style={{ marginBottom: "16px" }}>
+      <div className="wizard-form-group">
         <input
           className="input"
           placeholder="Название проекта *"
@@ -21,7 +21,7 @@ const Step1ProjectMain = ({ draft, setDraft }: Props) => {
         />
       </div>
 
-      <div className="row">
+      <div className="wizard-row">
         <input
           type="date"
           className="input"
@@ -40,16 +40,17 @@ const Step1ProjectMain = ({ draft, setDraft }: Props) => {
         />
       </div>
 
-      <div style={{ marginTop: "16px" }}>
+      <div className="wizard-form-group">
         <label className="muted">Приоритет: {draft.priority}/10</label>
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={draft.priority}
-          onChange={(e) => setDraft({ ...draft, priority: Number(e.target.value) })}
-          style={{ width: "100%" }}
-        />
+        <div className="range-container">
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={draft.priority}
+            onChange={(e) => setDraft({ ...draft, priority: Number(e.target.value) })}
+          />
+        </div>
       </div>
     </div>
   );

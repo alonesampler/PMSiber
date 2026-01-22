@@ -1,0 +1,42 @@
+services:
+  backend: 
+    image: pms.host
+    
+    # depends_on:
+    #   - proj_mssql
+
+    ports:
+      - "5000:8080"
+
+    build: 
+        context: .
+        dockerfile: backend/src/dockerfile
+
+
+  proj_mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+    ports: 
+      - "1433:1433"
+
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: my-Se1c%ret-pw
+
+    volumes:
+      - mssql-config:/var/lib/mysql
+
+  frontend_react:
+    image: frontend
+
+    ports:
+      - "5173:5173"
+
+    build:
+        context: .
+        dockerfile: frontend/dockerfile
+    
+
+volumes:
+  mssql-config:
+    name: mssql-1-volume

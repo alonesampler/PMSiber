@@ -112,8 +112,8 @@ const Wizard = () => {
   };
 
   return (
-    <div className="container">
-      <div className="header">
+    <div className="wizard-container">
+      <div className="wizard-header">
         <div>
           <h1 className="h1">Создание проекта</h1>
           <div className="sub">Шаг {step} из 5</div>
@@ -123,24 +123,24 @@ const Wizard = () => {
         </button>
       </div>
 
-      <div className="panel">
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px" }}>
-          {[1, 2, 3, 4, 5].map((num) => (
-            <div key={num} style={{ textAlign: "center", flex: 1 }}>
-              <div className={`step-indicator ${step === num ? 'active' : step > num ? 'completed' : ''}`}>
-                {num}
-              </div>
-              <div className="muted step-label">
-                {num === 1 && "Основное"}
-                {num === 2 && "Компании"}
-                {num === 3 && "Менеджер"}
-                {num === 4 && "Команда"}
-                {num === 5 && "Документы"}
-              </div>
+      <div className="wizard-steps">
+        {[1, 2, 3, 4, 5].map((num) => (
+          <div key={num} style={{ textAlign: "center", flex: 1 }}>
+            <div className={`step-indicator ${step === num ? 'active' : step > num ? 'completed' : ''}`}>
+              {num}
             </div>
-          ))}
-        </div>
+            <div className="muted step-label">
+              {num === 1 && "Основное"}
+              {num === 2 && "Компании"}
+              {num === 3 && "Менеджер"}
+              {num === 4 && "Команда"}
+              {num === 5 && "Документы"}
+            </div>
+          </div>
+        ))}
+      </div>
 
+      <div className="wizard-step-content">
         {step === 1 && <Step1ProjectMain draft={draft} setDraft={setDraft} />}
         {step === 2 && <Step2Companies draft={draft} setDraft={setDraft} />}
         {step === 3 && <Step3Manager draft={draft} setDraft={setDraft} />}
@@ -148,9 +148,7 @@ const Wizard = () => {
         {step === 5 && <Step5Documents draft={draft} setDraft={setDraft} />}
       </div>
 
-      <div className="spacer" />
-
-      <div className="row" style={{ justifyContent: "space-between" }}>
+      <div className="wizard-navigation">
         <button 
           className="btn" 
           disabled={step === 1 || saving} 
@@ -159,7 +157,7 @@ const Wizard = () => {
           Назад
         </button>
 
-        <div className="row">
+        <div className="wizard-navigation-buttons">
           <button 
             className="btn" 
             disabled={saving} 

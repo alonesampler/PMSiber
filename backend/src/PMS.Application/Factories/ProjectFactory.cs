@@ -28,29 +28,18 @@ public static class ProjectFactory
         );
     }
 
-    public static ProjectListDto ToListDto(this Project project)
+    public static Project CollectFromDto(ProjectUpsertDto dto)
     {
-        var managerName = project.Manager is null
-            ? string.Empty
-            : $"{project.Manager.FullName.LastName} {project.Manager.FullName.FirstName}";
+            var project = Project.Create(
+            Guid.CreateVersion7(),
+            dto.Params.Name,
+            dto.Params.CustomerCompanyName,
+            dto.Params.ExecutorCompanyName,
+            dto.Params.StartDate,
+            dto.Params.EndDate,
+            dto.Params.Priority,
+            dto.ManagerId);
 
-        var startDate = project.StartDate.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(project.StartDate, DateTimeKind.Utc)
-            : project.StartDate;
-
-        var endDate = project.EndDate.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(project.EndDate, DateTimeKind.Utc)
-            : project.EndDate;
-
-        return new ProjectListDto(
-            project.Id,
-            project.Name,
-            project.CustomerCompanyName,
-            startDate,
-            endDate,
-            project.Priority,
-            managerName,
-            project.Employees.Count
-        );
+        return project;
     }
 }

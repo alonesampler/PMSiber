@@ -1,7 +1,7 @@
 type Props = {
   value: string;
   onChange: (v: string) => void;
-  onReset: () => void; // Добавили onReset
+  onReset: () => void;
 };
 
 const EmployeeSearch = ({ value, onChange, onReset }: Props) => {

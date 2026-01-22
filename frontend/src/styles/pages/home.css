@@ -1,0 +1,187 @@
+/* ===== HOME PAGE STYLES ===== */
+
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-secondary);
+}
+
+.home-hero {
+  text-align: center;
+  padding-top: 60px;
+  padding-bottom: var(--space-xl);
+}
+
+.home-title {
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.home-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2xl);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: var(--leading-relaxed);
+}
+
+/* Карточки возможностей */
+.home-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-lg);
+  max-width: 600px;
+  margin: 0 auto var(--space-xl);
+}
+
+.home-feature-card {
+  padding: var(--space-xl);
+  text-align: center;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.home-feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-md);
+  display: block;
+}
+
+.home-feature-title {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+.home-feature-description {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+  flex-grow: 1;
+  line-height: var(--leading-normal);
+}
+
+/* Панель быстрых действий */
+.home-actions-panel {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.home-actions-title {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-lg);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.home-actions-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .home-hero {
+    padding-top: var(--space-xl);
+    padding-bottom: var(--space-lg);
+  }
+  
+  .home-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .home-subtitle {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--space-xl);
+    padding: 0 var(--space-md);
+  }
+  
+  .home-features-grid {
+    grid-template-columns: 1fr;
+    padding: 0 var(--space-md);
+    gap: var(--space-md);
+  }
+  
+  .home-feature-card {
+    padding: var(--space-lg);
+  }
+  
+  .home-actions-panel {
+    margin: 0 var(--space-md);
+    padding: var(--space-lg);
+  }
+  
+  .home-actions-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .home-actions-buttons .btn {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-hero {
+    padding-top: var(--space-lg);
+  }
+  
+  .home-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .home-feature-card {
+    padding: var(--space-md);
+  }
+  
+  .home-actions-panel {
+    padding: var(--space-md);
+  }
+}
+
+/* Анимации для плавного появления */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-feature-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.home-feature-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.home-actions-panel {
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
