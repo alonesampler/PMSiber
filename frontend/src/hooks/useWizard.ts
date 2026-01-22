@@ -2,8 +2,8 @@ import { useState } from "react";
 
 export type ProjectDraft = {
   name: string;
-  startDate: string; // yyyy-mm-dd
-  endDate: string;   // yyyy-mm-dd
+  startDate: string;
+  endDate: string;
   priority: number;
 
   customerCompanyName: string;

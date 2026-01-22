@@ -60,7 +60,6 @@ const ProjectCard = ({ project, onDelete }: Props) => {
       onClick={handleCardClick}
     >
       <div className="project-card-content">
-        {/* Шапка карточки */}
         <div className="project-card-header">
           <div className="project-card-title">
             <h3 className="project-card-name">{project.name}</h3>
@@ -77,7 +76,6 @@ const ProjectCard = ({ project, onDelete }: Props) => {
           </div>
         </div>
 
-        {/* Информация о проекте */}
         <div className="project-card-info">
           <div className="info-row">
             <span className="info-label">👤 Менеджер</span>
@@ -104,7 +102,6 @@ const ProjectCard = ({ project, onDelete }: Props) => {
           </div>
         </div>
 
-        {/* Кнопки действий */}
         <div className="project-card-actions">
           <Link 
             to={`/projects/${project.id}/edit`}

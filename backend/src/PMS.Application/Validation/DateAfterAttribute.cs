@@ -17,13 +17,13 @@ public class DateAfterAttribute : ValidationAttribute
         var property = validationContext.ObjectType.GetProperty(_comparisonProperty);
 
         if (property == null)
-            return new ValidationResult($"Неизвестное свойство: {_comparisonProperty}");
+            return new ValidationResult($"Unknown property: {_comparisonProperty}");
 
         var comparisonValue = (DateTime?)property.GetValue(validationContext.ObjectInstance);
 
         if (currentValue.HasValue && comparisonValue.HasValue && currentValue <= comparisonValue)
         {
-            return new ValidationResult($"{validationContext.DisplayName} должна быть позже {_comparisonProperty}");
+            return new ValidationResult($"{validationContext.DisplayName} should be later {_comparisonProperty}");
         }
 
         return ValidationResult.Success;

@@ -30,7 +30,7 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(d => d.UploadDate)
             .IsRequired();
 
-        // Связь: Document -> Project (Many-to-One)
+        //Document -> Project (Many-to-One)
         builder.HasOne(d => d.Project)
             .WithMany(p => p.Documents)
             .HasForeignKey(d => d.ProjectId)

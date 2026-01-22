@@ -9,10 +9,10 @@ public class Email : ValueObject
     public Email(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new DomainException("Email не может быть пустым", "EMAIL_EMPTY");
+            throw new DomainException("Email can not be empty", "EMAIL_EMPTY");
 
         if (!IsValidEmail(value))
-            throw new DomainException("Некорректный формат email", "INVALID_EMAIL_FORMAT");
+            throw new DomainException("invalid format email", "INVALID_EMAIL_FORMAT");
 
         Value = value.ToLowerInvariant();
     }

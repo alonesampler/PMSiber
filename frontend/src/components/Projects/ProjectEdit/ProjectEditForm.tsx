@@ -9,24 +9,20 @@ type Props = {
 };
 
 const ProjectEditForm = ({ formData, onChange }: Props) => {
-  // Состояния для менеджера
   const [managerQuery, setManagerQuery] = useState("");
   const [managerResults, setManagerResults] = useState<EmployeeResponseDto[]>([]);
   const [managerLoading, setManagerLoading] = useState(false);
   const [selectedManager, setSelectedManager] = useState<EmployeeResponseDto | null>(null);
 
-  // Состояния для команды
   const [teamQuery, setTeamQuery] = useState("");
   const [allEmployees, setAllEmployees] = useState<EmployeeResponseDto[]>([]);
   const [teamFiltered, setTeamFiltered] = useState<EmployeeResponseDto[]>([]);
   const [teamLoading, setTeamLoading] = useState(false);
 
-  // Загружаем всех сотрудников при монтировании (для команды)
   useEffect(() => {
     loadAllEmployees();
   }, []);
 
-  // Загружаем менеджера при изменении ID
   useEffect(() => {
     if (formData.managerId && allEmployees.length > 0) {
       const manager = allEmployees.find(e => e.id === formData.managerId);
@@ -36,7 +32,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
     }
   }, [formData.managerId, allEmployees]);
 
-  // Фильтруем сотрудников для команды при изменении запроса
   useEffect(() => {
     if (!teamQuery.trim()) {
       setTeamFiltered(allEmployees.filter(emp => emp.id !== formData.managerId));
@@ -77,7 +72,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
     setManagerLoading(true);
     try {
       const results = await EmployeesApi.search(searchQuery);
-      // Исключаем текущего менеджера из результатов
       const filteredResults = results.filter(emp => emp.id !== formData.managerId);
       setManagerResults(filteredResults);
     } catch (error) {
@@ -90,11 +84,9 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
   const handleSelectManager = (employee: EmployeeResponseDto) => {
     onChange({ ...formData, managerId: employee.id });
     
-    // Убираем выбранного менеджера из команды, если он там был
     const newEmployeesIds = formData.employeesIds.filter(id => id !== employee.id);
     onChange({ ...formData, managerId: employee.id, employeesIds: newEmployeesIds });
     
-    // Сбрасываем поиск менеджера
     setManagerQuery("");
     setManagerResults([]);
   };
@@ -118,7 +110,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
 
   return (
     <div className="space-y-6">
-      {/* Основные поля проекта */}
       <div className="edit-form-section">
         <h2 className="h2">Основная информация</h2>
         
@@ -227,7 +218,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
         </div>
       </div>
 
-      {/* Выбор менеджера */}
       <div className="edit-form-section">
         <h2 className="h2">Менеджер проекта</h2>
         
@@ -248,7 +238,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
             </div>
           </div>
 
-          {/* Выбранный менеджер */}
           {selectedManager && (
             <div className="selected-manager-card">
               <div className="selected-manager-info">
@@ -265,7 +254,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
             </div>
           )}
 
-          {/* Список сотрудников для выбора менеджера */}
           {managerResults.length > 0 && (
             <div className="manager-selection-list">
               <div className="manager-selection-header">
@@ -306,7 +294,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
         </div>
       </div>
 
-      {/* Выбор исполнителей */}
       <div className="edit-form-section">
         <div className="team-header">
           <h2 className="h2">Команда проекта</h2>
@@ -338,7 +325,6 @@ const ProjectEditForm = ({ formData, onChange }: Props) => {
             />
           </div>
 
-          {/* Список исполнителей */}
           {teamFiltered.length > 0 && (
             <div className="team-members-grid">
               {teamFiltered.map(employee => {

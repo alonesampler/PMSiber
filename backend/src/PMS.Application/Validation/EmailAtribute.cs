@@ -16,11 +16,11 @@ public class ValidEmailAttribute : ValidationAttribute
 
         var email = value.ToString();
         if (string.IsNullOrWhiteSpace(email))
-            return new ValidationResult("Email обязателен для заполнения");
+            return new ValidationResult("Email required field");
 
         if (!EmailRegex.IsMatch(email))
-            return new ValidationResult("Некорректный формат email");
-
+            return new ValidationResult("Invalid format email");
+            
         return ValidationResult.Success;
     }
 }

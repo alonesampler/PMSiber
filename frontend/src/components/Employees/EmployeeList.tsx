@@ -4,9 +4,9 @@ import type {
   EmployeeParamsDto,
   EmployeeResponseDto
 } from '../../types/employee.types';
-import EmployeeCard from './EmployeeCard'; // Исправлено
+import EmployeeCard from './EmployeeCard';
 import EmployeeForm from './EmployeeForm';
-import EmployeeSearch from './EmployeeSearch'; // Исправлено
+import EmployeeSearch from './EmployeeSearch';
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<EmployeeResponseDto[]>([]);

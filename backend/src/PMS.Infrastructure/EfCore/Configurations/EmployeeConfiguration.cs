@@ -25,13 +25,13 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             e.Property(x => x.Value).HasColumnName("Email").HasMaxLength(200);
         });
 
-        // Связь: Employee -> ManagedProjects (One-to-Many)
+        //Employee -> ManagedProjects (One-to-Many)
         builder.HasMany(e => e.ManagedProjects)
             .WithOne(p => p.Manager)
             .HasForeignKey(p => p.ManagerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Связь: Employee -> AssignedProjects (Many-to-Many)
+        //Employee -> AssignedProjects (Many-to-Many)
         builder.HasMany(e => e.AssignedProjects)
             .WithMany(p => p.Employees)
             .UsingEntity<Dictionary<string, object>>(

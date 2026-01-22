@@ -172,7 +172,6 @@ const ProjectEdit = () => {
       </div>
 
       <div className="project-edit-grid">
-        {/* Основная форма редактирования */}
         <div className="edit-main-content">
           <ProjectEditForm 
             formData={formData}
@@ -180,9 +179,7 @@ const ProjectEdit = () => {
           />
         </div>
 
-        {/* Боковая панель с документами */}
         <div className="edit-sidebar">
-          {/* Панель документов */}
           <div className="sidebar-panel">
             <div className="sidebar-header">
               <h2 className="h2">Документы проекта</h2>
@@ -244,7 +241,6 @@ const ProjectEdit = () => {
             </div>
           </div>
 
-          {/* Быстрые действия */}
           <div className="sidebar-panel">
             <h3 className="h3 mb-4">Быстрые действия</h3>
             <div className="quick-actions">

@@ -14,7 +14,7 @@ const Layout = ({ children }: Props) => {
 
   return (
     <div className="appShell">
-      {/* ШАПКА (Header) */}
+      {/*(Header) */}
       <nav className="layout-navbar">
         <div className="container layout-nav-content">
           <Link to="/" className="layout-nav-logo">
@@ -39,14 +39,14 @@ const Layout = ({ children }: Props) => {
         </div>
       </nav>
 
-      {/* ОСНОВНОЙ КОНТЕНТ */}
+      {/* main */}
       <main className="layout-main">
         <div className="container" style={{ paddingTop: 'var(--space-lg)', paddingBottom: 'var(--space-xl)' }}>
           {children}
         </div>
       </main>
 
-      {/* ПОДВАЛ (Footer) */}
+      {/* Footer */}
       <footer className="layout-footer">
         <div className="container layout-footer-content">
           <div>
