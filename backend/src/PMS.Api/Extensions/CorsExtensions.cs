@@ -9,15 +9,15 @@ public static class CorsExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var section = configuration.GetSection("Cors");
-        var viteFrontend = section["ViteFrontend"];
+        var corsSettings = configuration.GetSection("Cors");
+        var allowedOrigins = corsSettings.GetSection("AllowedOrigins").Get<string[]>();
 
         services.AddCors(options =>
         {
             options.AddPolicy("Frontend", policy =>
             {
                 policy
-                    .WithOrigins(viteFrontend ?? "http://localhost:5173")
+                    .WithOrigins(allowedOrigins ?? new[] { "http://localhost:5173" })
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
