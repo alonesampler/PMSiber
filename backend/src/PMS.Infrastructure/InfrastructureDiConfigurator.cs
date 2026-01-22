@@ -9,9 +9,9 @@ public static class InfrastructureDiConfigurator
     public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var section = configuration.GetSection("ConnectionStrings");
-        var postgres = section["Postgres"];
+        var msSql = section["MsSql"];
 
         EfCoreDiConfigurator.AddRepositories(services, configuration);
-        EfCoreDiConfigurator.ConnectDbContext(services, configuration, postgres);
+        EfCoreDiConfigurator.ConnectDbContext(services, configuration, msSql);
     }
 }
