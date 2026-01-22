@@ -24,13 +24,14 @@ public class EmployeeRepository(AppDbContext DbContext) : IEmployeeRepository
         if (string.IsNullOrWhiteSpace(query))
             return GetAllAsync();
 
+        var q = query.Trim();
+
         return DbContext.Employees
             .Where(e =>
-                EF.Functions.ILike(e.FullName.FirstName, $"%{query}%") ||
-                EF.Functions.ILike(e.FullName.LastName, $"%{query}%") ||
-                (e.FullName.MiddleName != null &&
-                 EF.Functions.ILike(e.FullName.MiddleName, $"%{query}%")) ||
-                EF.Functions.ILike(e.Email.Value, $"%{query}%")
+                e.FullName.FirstName.Contains(q) ||
+                e.FullName.LastName.Contains(q) ||
+                e.FullName.MiddleName!.Contains(q) ||
+                e.Email.Value.Contains(q)
             )
             .ToArrayAsync();
     }
