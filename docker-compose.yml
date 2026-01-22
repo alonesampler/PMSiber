@@ -1,42 +1,40 @@
 services:
-  backend: 
+  backend:
     image: pms.host
-    
-    # depends_on:
-    #   - proj_mssql
-
+    depends_on:
+      proj_mssql:
+        condition: service_healthy
     ports:
       - "5000:8080"
-
-    build: 
-        context: .
-        dockerfile: backend/src/dockerfile
-
+    build:
+      context: .
+      dockerfile: backend/src/dockerfile
 
   proj_mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
-
-    ports: 
+    ports:
       - "1433:1433"
-
     environment:
-      ACCEPT_EULA: Y
-      MSSQL_SA_PASSWORD: my-Se1c%ret-pw
-
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "my-Se1c%ret-pw"
     volumes:
-      - mssql-config:/var/lib/mysql
+      - mssql-data:/var/opt/mssql
+
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "my-Se1c%ret-pw", "-Q", "SELECT 1", "-b", "-No"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
 
   frontend_react:
     image: frontend
-
     ports:
       - "5173:5173"
-
     build:
-        context: .
-        dockerfile: frontend/dockerfile
-    
+      context: .
+      dockerfile: frontend/dockerfile
 
 volumes:
-  mssql-config:
+  mssql-data:
     name: mssql-1-volume
