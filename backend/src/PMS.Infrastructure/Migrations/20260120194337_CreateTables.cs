@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace PMS.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class CreateTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,11 +15,11 @@ namespace PMS.Infrastructure.Migrations
                 name: "Employees",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    MiddleName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    Email = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    MiddleName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -30,14 +30,14 @@ namespace PMS.Infrastructure.Migrations
                 name: "Projects",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    CustomerCompanyName = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
-                    ExecutorCompanyName = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Priority = table.Column<int>(type: "integer", nullable: false),
-                    ManagerId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    CustomerCompanyName = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    ExecutorCompanyName = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    ManagerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -54,13 +54,13 @@ namespace PMS.Infrastructure.Migrations
                 name: "Documents",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileName = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    FilePath = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    ContentType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    ContentType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     FileSize = table.Column<long>(type: "bigint", nullable: false),
-                    UploadDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false)
+                    UploadDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -77,8 +77,8 @@ namespace PMS.Infrastructure.Migrations
                 name: "EmployeeProjects",
                 columns: table => new
                 {
-                    EmployeeId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false)
+                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {

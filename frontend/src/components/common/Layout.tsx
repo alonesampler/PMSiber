@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
+import "../../styles/components/layout.css";
 
 type Props = {
   children: ReactNode;
@@ -8,27 +9,29 @@ type Props = {
 const Layout = ({ children }: Props) => {
   const { pathname } = useLocation();
 
-  const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+  const isActive = (path: string) => 
+    pathname === path || pathname.startsWith(`${path}/`);
 
   return (
-    <div className="appShell flex flex-col min-h-screen">
-      <nav className="navbar">
-        <div className="container nav-content">
-          <Link to="/" className="nav-logo">
+    <div className="appShell">
+      {/* ШАПКА (Header) */}
+      <nav className="layout-navbar">
+        <div className="container layout-nav-content">
+          <Link to="/" className="layout-nav-logo">
             <span className="text-2xl">📊</span>
             <span>PMS Pro</span>
           </Link>
           
-          <div className="nav-links">
+          <div className="layout-nav-links">
             <Link 
               to="/employees" 
-              className={`nav-link ${isActive('/employees') ? 'active' : ''}`}
+              className={`layout-nav-link ${isActive('/employees') ? 'active' : ''}`}
             >
               👥 Сотрудники
             </Link>
             <Link 
               to="/projects" 
-              className={`nav-link ${isActive('/projects') ? 'active' : ''}`}
+              className={`layout-nav-link ${isActive('/projects') ? 'active' : ''}`}
             >
               📁 Проекты
             </Link>
@@ -36,12 +39,16 @@ const Layout = ({ children }: Props) => {
         </div>
       </nav>
 
-      <main className="flex-1">
-        {children}
+      {/* ОСНОВНОЙ КОНТЕНТ */}
+      <main className="layout-main">
+        <div className="container" style={{ paddingTop: 'var(--space-lg)', paddingBottom: 'var(--space-xl)' }}>
+          {children}
+        </div>
       </main>
 
-      <footer className="footer">
-        <div className="container footer-content">
+      {/* ПОДВАЛ (Footer) */}
+      <footer className="layout-footer">
+        <div className="container layout-footer-content">
           <div>
             <div className="font-semibold text-gray-900">Project Management System</div>
             <div className="text-sm text-gray-600 mt-1">Управление проектами и командой</div>

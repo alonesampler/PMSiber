@@ -1,7 +1,7 @@
 ﻿using PMS.Domain.Abstractions;
 
 namespace PMS.Domain.Entities;
-
+//The aggregate in our context
 public class Project : Entity<Guid>
 {
     private readonly List<Employee> _employees = new();

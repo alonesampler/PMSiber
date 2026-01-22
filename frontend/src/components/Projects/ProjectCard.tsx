@@ -16,60 +16,113 @@ const ProjectCard = ({ project, onDelete }: Props) => {
     const start = new Date(project.startDate);
     const end = new Date(project.endDate);
     
-    if (now < start) return { text: "Запланирован", color: "badge-primary" };
-    if (now > end) return { text: "Завершен", color: "badge-success" };
-    return { text: "В работе", color: "badge-warning" };
+    if (now < start) return { 
+      text: "Запланирован", 
+      color: "badge-primary",
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-800",
+      icon: "📅"
+    };
+    if (now > end) return { 
+      text: "Завершен", 
+      color: "badge-success",
+      bgColor: "bg-green-50",
+      textColor: "text-green-800",
+      icon: "✅"
+    };
+    return { 
+      text: "В работе", 
+      color: "badge-warning",
+      bgColor: "bg-yellow-50",
+      textColor: "text-yellow-800",
+      icon: "🚀"
+    };
   };
 
   const status = getProjectStatus();
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();  
+    onDelete(project.id);
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.project-card-action')) {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <div className="card">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="h3">{project.name}</h3>
-        <span className={`badge ${status.color}`}>{status.text}</span>
-      </div>
+    <Link 
+      to={`/projects/${project.id}`} 
+      className="project-card block"
+      onClick={handleCardClick}
+    >
+      <div className="project-card-content">
+        {/* Шапка карточки */}
+        <div className="project-card-header">
+          <div className="project-card-title">
+            <h3 className="project-card-name">{project.name}</h3>
+            <span className={`project-card-status ${status.bgColor} ${status.textColor}`}>
+              <span className="status-icon">{status.icon}</span>
+              {status.text}
+            </span>
+          </div>
+          
+          <div className="project-card-priority">
+            <span className={`priority-value priority-${Math.ceil(project.priority / 2)}`}>
+              {project.priority}/10
+            </span>
+          </div>
+        </div>
 
-      <div className="space-y-2">
-        <p>
-          <span className="muted">Заказчик:</span> {project.customerCompanyName}
-        </p>
-        <p>
-          <span className="muted">Исполнитель:</span> {project.executorCompanyName}
-        </p>
-        <p>
-          <span className="muted">Менеджер:</span>{" "}
-          {project.manager?.lastName} {project.manager?.firstName}
-        </p>
-        <p>
-          <span className="muted">Приоритет:</span>{" "}
-          <span className={`font-semibold ${project.priority >= 8 ? 'text-red-600' : project.priority >= 5 ? 'text-yellow-600' : 'text-green-600'}`}>
-            {project.priority}/10
-          </span>
-        </p>
-        <p>
-          <span className="muted">Даты:</span> {formatDate(project.startDate)} - {formatDate(project.endDate)}
-        </p>
-        <p>
-          <span className="muted">Команда:</span> {project.employees?.length || 0} чел.
-        </p>
-      </div>
+        {/* Информация о проекте */}
+        <div className="project-card-info">
+          <div className="info-row">
+            <span className="info-label">👤 Менеджер</span>
+            <span className="info-value">
+              {project.manager?.lastName} {project.manager?.firstName}
+            </span>
+          </div>
+          
+          <div className="info-row">
+            <span className="info-label">🏢 Заказчик</span>
+            <span className="info-value truncate">{project.customerCompanyName}</span>
+          </div>
+          
+          <div className="info-row">
+            <span className="info-label">📅 Сроки</span>
+            <span className="info-value">
+              {formatDate(project.startDate)} – {formatDate(project.endDate)}
+            </span>
+          </div>
+          
+          <div className="info-row">
+            <span className="info-label">👥 Команда</span>
+            <span className="info-value">{project.employees?.length || 0} человек</span>
+          </div>
+        </div>
 
-      <div className="flex gap-2 mt-6">
-        <Link to={`/projects/${project.id}`} className="btn flex-1">
-          Подробнее
-        </Link>
-        <Link to={`/projects/${project.id}/edit`} className="btn btn-secondary">
-          Редактировать
-        </Link>
-        <button 
-          className="btn btnDanger"
-          onClick={() => onDelete(project.id)}
-        >
-          Удалить
-        </button>
+        {/* Кнопки действий */}
+        <div className="project-card-actions">
+          <Link 
+            to={`/projects/${project.id}/edit`}
+            className="project-card-action btn btn-secondary btn-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            ✏️ Редактировать
+          </Link>
+          
+          <button 
+            className="project-card-action btn btn-danger btn-sm"
+            onClick={handleDelete}
+          >
+            🗑️ Удалить
+          </button>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

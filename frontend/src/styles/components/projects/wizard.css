@@ -1,0 +1,386 @@
+/* ===== WIZARD COMPONENTS STYLES ===== */
+
+/* Контейнер wizard */
+.wizard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-lg) 0;
+}
+
+/* Заголовок wizard */
+.wizard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.wizard-header h1 {
+  margin-bottom: var(--space-xs);
+}
+
+.wizard-header .sub {
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+}
+
+/* Шаги навигации */
+.wizard-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+  position: relative;
+}
+
+.wizard-steps::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--border-color);
+  z-index: 1;
+}
+
+.step-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 auto var(--space-sm);
+  position: relative;
+  z-index: 2;
+  transition: all var(--transition-base);
+}
+
+.step-indicator.active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.step-indicator.completed {
+  background-color: var(--success-color);
+  border-color: var(--success-color);
+  color: white;
+}
+
+.step-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Контент шага */
+.wizard-step-content {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Стили для Step1ProjectMain */
+.wizard-form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.wizard-form-group label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.wizard-form-group .muted {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-size-sm);
+}
+
+/* Ряд элементов */
+.wizard-row {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .wizard-row {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}
+
+/* Range input стилизация */
+.range-container {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+.range-container input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-secondary);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.range-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+}
+
+.range-container input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Стили для Step3Manager и Step4Employees */
+.employee-search-container {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.employee-search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-md);
+}
+
+.employee-search-results {
+  margin-top: var(--space-md);
+}
+
+.employee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.employee-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.employee-card:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.employee-card.selected {
+  background-color: #e0f2fe;
+  border-color: var(--primary-color);
+}
+
+.employee-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.employee-card.disabled:hover {
+  transform: none;
+  border-color: var(--border-color);
+}
+
+.employee-info {
+  margin-bottom: var(--space-sm);
+}
+
+.employee-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.employee-email {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.employee-status {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+}
+
+/* Стили для Step5Documents */
+.file-upload-area {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background-color: var(--bg-primary);
+  margin-bottom: var(--space-lg);
+}
+
+.file-upload-area:hover,
+.file-upload-area.drag-over {
+  border-color: var(--primary-color);
+  background-color: var(--bg-secondary);
+}
+
+.file-upload-title {
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+.file-upload-hint {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.file-upload-count {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-sm);
+}
+
+.file-list {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.file-info {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.file-size {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Кнопки навигации */
+.wizard-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--space-xl);
+}
+
+.wizard-navigation-buttons {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .wizard-step-content {
+    padding: var(--space-md);
+  }
+  
+  .wizard-steps {
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+  
+  .wizard-steps::before {
+    display: none;
+  }
+  
+  .employee-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .wizard-navigation {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .wizard-navigation-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .wizard-navigation-buttons button {
+    width: 100%;
+  }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.wizard-step-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Прогресс бар */
+.progress-bar {
+  height: 4px;
+  background-color: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: var(--space-md) 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
+}

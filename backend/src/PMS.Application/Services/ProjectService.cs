@@ -10,6 +10,10 @@ namespace PMS.Application.Services;
 
 public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
 {
+    private readonly string _dataRootPath = Path.GetFullPath(Path.Combine(
+        Directory.GetCurrentDirectory(),
+        "..", "..", "..", "data"));
+
     public async Task<Result<ProjectResponseDto>> CreateAsync(ProjectUpsertDto dto)
     {
         if (dto.Params.StartDate >= dto.Params.EndDate)
@@ -32,15 +36,7 @@ public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
             employees.Add(employee);
         }
 
-        var project = Project.Create(
-            Guid.CreateVersion7(),
-            dto.Params.Name,
-            dto.Params.CustomerCompanyName,
-            dto.Params.ExecutorCompanyName,
-            dto.Params.StartDate,
-            dto.Params.EndDate,
-            dto.Params.Priority,
-            manager.Id);
+        var project = ProjectFactory.CollectFromDto(dto);
 
         SetPrivateProperty(project, "Manager", manager);
 
@@ -127,8 +123,10 @@ public class ProjectService(IUnitOfWork UnitOfWork) : IProjectService
         if (project == null)
             return Result.Fail(AppError.ProjectNotFound);
 
-        if (project.Documents.Any())
-            return Result.Fail(AppError.ProjectHasDocuments);
+        var projectFolder = Path.Combine(_dataRootPath, "uploads", "projects", id.ToString());
+        if (Directory.Exists(projectFolder))
+            try { Directory.Delete(projectFolder, recursive: true); }
+            catch { }
 
         await UnitOfWork.ProjectRepository.DeleteAsync(project);
         await UnitOfWork.SaveChangesAsync();

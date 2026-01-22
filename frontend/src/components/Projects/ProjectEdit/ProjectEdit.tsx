@@ -10,6 +10,7 @@ const ProjectEdit = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [documents, setDocuments] = useState<DocumentResponseDto[]>([]);
   const [formData, setFormData] = useState<ProjectFormData | null>(null);
 
@@ -31,7 +32,7 @@ const ProjectEdit = () => {
           name: projectData.name,
           customerCompanyName: projectData.customerCompanyName,
           executorCompanyName: projectData.executorCompanyName,
-          startDate: projectData.startDate.split('T')[0], // Для input[type="date"]
+          startDate: projectData.startDate.split('T')[0],
           endDate: projectData.endDate.split('T')[0],
           priority: projectData.priority
         },
@@ -66,9 +67,30 @@ const ProjectEdit = () => {
       alert("Проект успешно обновлен!");
       navigate(`/projects/${id}`);
     } catch (error: any) {
-      alert(error.message || "Ошибка при обновлении проекта");
+      const errorMessage = error.response?.data?.message || error.message || "Ошибка при обновлении проекта";
+      alert(errorMessage);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!id) return;
+    
+    if (!confirm("Вы уверены, что хотите удалить этот проект? Это действие нельзя отменить.")) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await ProjectsApi.delete(id);
+      alert("Проект успешно удален!");
+      navigate("/projects");
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || "Ошибка при удалении проекта";
+      alert(errorMessage);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -81,16 +103,25 @@ const ProjectEdit = () => {
         const updatedDocuments = await DocumentsApi.getByProject(id);
         setDocuments(updatedDocuments);
       }
+      alert("Документ удален");
     } catch (error) {
       alert("Ошибка при удалении документа");
     }
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   if (loading) {
     return (
-      <div className="container">
+      <div className="container project-edit-container">
         <div className="panel">
-          <div className="muted">Загрузка...</div>
+          <div className="muted text-center py-8">Загрузка проекта...</div>
         </div>
       </div>
     );
@@ -98,30 +129,40 @@ const ProjectEdit = () => {
 
   if (!formData) {
     return (
-      <div className="container">
+      <div className="container project-edit-container">
         <div className="panel">
-          <div className="muted">Проект не найден</div>
+          <div className="muted text-center py-8">Проект не найден</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <div className="header">
-        <div>
+    <div className="container project-edit-container">
+      <div className="project-edit-header">
+        <div className="header-title">
           <h1 className="h1">Редактирование проекта</h1>
-          <div className="sub">ID: {id}</div>
+          <div className="sub text-gray-600">ID: {id}</div>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="project-edit-actions">
           <button 
-            className="btn"
+            className="btn btn-danger"
+            onClick={handleDeleteProject}
+            disabled={deleting}
+          >
+            {deleting ? "Удаление..." : "Удалить проект"}
+          </button>
+          
+          <button 
+            className="btn btn-secondary"
             onClick={() => navigate(`/projects/${id}`)}
           >
             Отмена
           </button>
+          
           <button 
-            className="btn btnPrimary"
+            className="btn btn-primary"
             onClick={handleSave}
             disabled={saving}
           >
@@ -130,48 +171,100 @@ const ProjectEdit = () => {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
-        <div>
+      <div className="project-edit-grid">
+        {/* Основная форма редактирования */}
+        <div className="edit-main-content">
           <ProjectEditForm 
             formData={formData}
             onChange={setFormData}
           />
         </div>
 
-        <div>
-          <div className="panel">
-            <h2 className="h2">Документы проекта</h2>
-            <div className="spacer" />
+        {/* Боковая панель с документами */}
+        <div className="edit-sidebar">
+          {/* Панель документов */}
+          <div className="sidebar-panel">
+            <div className="sidebar-header">
+              <h2 className="h2">Документы проекта</h2>
+              <span className="badge badge-primary">{documents.length}</span>
+            </div>
             
             {documents.length === 0 ? (
-              <div className="muted" style={{ textAlign: "center", padding: "20px" }}>
-                Документы отсутствуют
+              <div className="empty-state">
+                <div className="text-gray-500 mb-2">Документы отсутствуют</div>
+                <div className="text-sm text-gray-400">
+                  Загрузите документы на странице проекта
+                </div>
               </div>
             ) : (
-              <div className="grid" style={{ gridTemplateColumns: "1fr" }}>
+              <div className="documents-sidebar-list">
                 {documents.map(doc => (
-                  <div key={doc.id} className="card">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                          {doc.fileName}
-                        </div>
-                        <div className="muted" style={{ fontSize: "12px" }}>
-                          {new Date(doc.uploadDate).toLocaleDateString("ru-RU")}
-                        </div>
+                  <div key={doc.id} className="document-sidebar-item">
+                    <div className="document-sidebar-info">
+                      <div className="document-sidebar-name">
+                        {doc.fileName}
                       </div>
-                      
-                      <button
-                        className="btn btnDanger"
-                        onClick={() => handleDeleteDocument(doc.id)}
+                      <div className="document-sidebar-meta">
+                        <span>{formatFileSize(doc.fileSize)}</span>
+                        <span>•</span>
+                        <span>{new Date(doc.uploadDate).toLocaleDateString("ru-RU")}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="document-sidebar-actions">
+                      <a
+                        href={doc.downloadUrl || `/api/documents/${doc.id}/download`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-icon btn-sm"
+                        title="Скачать"
                       >
-                        Удалить
+                        📥
+                      </a>
+                      <button
+                        className="btn btn-icon btn-sm btn-danger"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                        title="Удалить"
+                      >
+                        🗑️
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+            
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <button
+                className="btn btn-secondary w-full"
+                onClick={() => navigate(`/projects/${id}#documents`)}
+              >
+                Управление документами
+              </button>
+            </div>
+          </div>
+
+          {/* Быстрые действия */}
+          <div className="sidebar-panel">
+            <h3 className="h3 mb-4">Быстрые действия</h3>
+            <div className="quick-actions">
+              <button
+                className="btn btn-secondary quick-action-btn"
+                onClick={() => navigate(`/projects/${id}`)}
+              >
+                ← Вернуться к просмотру
+              </button>
+              <button
+                className="btn btn-secondary quick-action-btn"
+                onClick={() => {
+                  if (confirm("Сбросить все изменения?")) {
+                    loadProjectData(id!);
+                  }
+                }}
+              >
+                ↺ Сбросить изменения
+              </button>
+            </div>
           </div>
         </div>
       </div>

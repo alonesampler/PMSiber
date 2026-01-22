@@ -92,7 +92,7 @@ const ProjectDetail = () => {
 
   if (loading) {
     return (
-      <div className="container">
+      <div className="project-detail-container">
         <div className="panel">
           <div className="muted">Загрузка...</div>
         </div>
@@ -102,7 +102,7 @@ const ProjectDetail = () => {
 
   if (!project) {
     return (
-      <div className="container">
+      <div className="project-detail-container">
         <div className="panel">
           <div className="muted">Проект не найден</div>
         </div>
@@ -111,13 +111,19 @@ const ProjectDetail = () => {
   }
 
   return (
-    <div className="container">
-      <div style={{ marginBottom: "24px" }}>
-        <div className="header">
-          <div>
-            <h1 className="h1">{project.name}</h1>
-            <div className="sub">ID: {project.id}</div>
-          </div>
+    <div className="project-detail-container">
+      <div className="project-detail-header">
+        <div>
+          <h1 className="project-title">{project.name}</h1>
+          <div className="project-subtitle">ID: {project.id}</div>
+        </div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button 
+            className="btn btnSecondary"
+            onClick={() => navigate(`/projects/${id}/edit`)}
+          >
+            Редактировать
+          </button>
           <button 
             className="btn"
             onClick={() => navigate("/projects")}
@@ -127,47 +133,62 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+      <div className="project-detail-grid">
         <div>
-          <div className="panel">
+          <div className="project-info-card">
             <h2 className="h2">Основная информация</h2>
             
-            <div style={{ marginTop: "16px" }}>
-              <p><strong>Заказчик:</strong> {project.customerCompanyName}</p>
-              <p><strong>Исполнитель:</strong> {project.executorCompanyName}</p>
-              <p><strong>Дата начала:</strong> {formatDate(project.startDate)}</p>
-              <p><strong>Дата окончания:</strong> {formatDate(project.endDate)}</p>
-              <p><strong>Приоритет:</strong> {project.priority}/10</p>
+            <div className="project-info-list">
+              <div className="project-info-item">
+                <span className="project-info-label">Заказчик:</span>
+                <span className="project-info-value">{project.customerCompanyName}</span>
+              </div>
+              <div className="project-info-item">
+                <span className="project-info-label">Исполнитель:</span>
+                <span className="project-info-value">{project.executorCompanyName}</span>
+              </div>
+              <div className="project-info-item">
+                <span className="project-info-label">Дата начала:</span>
+                <span className="project-info-value">{formatDate(project.startDate)}</span>
+              </div>
+              <div className="project-info-item">
+                <span className="project-info-label">Дата окончания:</span>
+                <span className="project-info-value">{formatDate(project.endDate)}</span>
+              </div>
+              <div className="project-info-item">
+                <span className="project-info-label">Приоритет:</span>
+                <span className="project-info-value">{project.priority}/10</span>
+              </div>
             </div>
           </div>
 
           <div style={{ height: "16px" }}></div>
 
-          <div className="panel">
+          <div className="project-info-card">
             <h2 className="h2">Команда проекта</h2>
             
-            <div style={{ marginTop: "16px" }}>
+            <div className="project-team-section">
               <h3 className="h3">Менеджер проекта</h3>
-              <div className="card" style={{ marginTop: "8px" }}>
-                <p>
+              <div className="manager-card">
+                <div className="employee-name">
                   {project.manager?.lastName} {project.manager?.firstName}
                   {project.manager?.middleName && ` ${project.manager.middleName}`}
-                </p>
-                <p className="muted">{project.manager?.email}</p>
+                </div>
+                <div className="employee-email">{project.manager?.email}</div>
               </div>
             </div>
 
             {project.employees && project.employees.length > 0 && (
-              <div style={{ marginTop: "24px" }}>
+              <div className="project-team-section">
                 <h3 className="h3">Исполнители ({project.employees.length})</h3>
-                <div className="grid" style={{ marginTop: "12px", gridTemplateColumns: "repeat(2, 1fr)" }}>
+                <div className="employees-grid">
                   {project.employees.map(emp => (
-                    <div key={emp.id} className="card">
-                      <p>
+                    <div key={emp.id} className="employee-card">
+                      <div className="employee-name">
                         {emp.lastName} {emp.firstName}
                         {emp.middleName && ` ${emp.middleName}`}
-                      </p>
-                      <p className="muted">{emp.email}</p>
+                      </div>
+                      <div className="employee-email">{emp.email}</div>
                     </div>
                   ))}
                 </div>
@@ -176,74 +197,75 @@ const ProjectDetail = () => {
           </div>
         </div>
 
-        <div>
-          <div className="panel">
+        <div className="documents-panel">
+          <div className="project-info-card">
             <h2 className="h2">Документы</h2>
-            <div className="spacer" />
             
-            <div className="card" style={{ marginBottom: "16px" }}>
-              <div style={{ marginBottom: "12px" }}>
-                <div className="muted">Загрузка новых документов</div>
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => setSelectedFiles(e.target.files)}
-                  className="input"
-                  style={{ marginTop: "8px" }}
-                />
+            <div className={`upload-area ${selectedFiles ? 'drag-over' : ''}`}>
+              <div className="upload-title">
+                {selectedFiles ? "Отпустите для загрузки" : "Загрузите документы"}
               </div>
+              <div className="upload-hint">
+                Перетащите файлы или кликните для выбора
+              </div>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => setSelectedFiles(e.target.files)}
+                className="input"
+                style={{ marginTop: "8px", width: "100%" }}
+              />
               
               {selectedFiles && selectedFiles.length > 0 && (
-                <div style={{ marginBottom: "12px" }}>
-                  <div className="muted">Выбрано файлов: {selectedFiles.length}</div>
+                <div className="upload-count">
+                  Выбрано файлов: {selectedFiles.length}
                 </div>
               )}
-              
-              <button
-                className="btn btnPrimary"
-                onClick={handleFileUpload}
-                disabled={!selectedFiles || selectedFiles.length === 0 || uploading}
-              >
-                {uploading ? "Загрузка..." : "Загрузить документы"}
-              </button>
             </div>
 
-            <div className="spacer" />
+            <button
+              className="btn btnPrimary"
+              onClick={handleFileUpload}
+              disabled={!selectedFiles || selectedFiles.length === 0 || uploading}
+              style={{ width: "100%", marginTop: "16px" }}
+            >
+              {uploading ? "Загрузка..." : "Загрузить документы"}
+            </button>
+
+            <div className="spacer"></div>
             
             {documents.length === 0 ? (
               <div className="muted" style={{ textAlign: "center", padding: "20px" }}>
                 Документы отсутствуют
               </div>
             ) : (
-              <div className="grid" style={{ gridTemplateColumns: "1fr" }}>
+              <div className="documents-list">
                 {documents.map(doc => (
-                  <div key={doc.id} className="card">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: "500", marginBottom: "4px" }}>
-                          {doc.fileName}
-                        </div>
-                        <div className="muted" style={{ fontSize: "12px", marginBottom: "4px" }}>
-                          {formatFileSize(doc.fileSize)} • {doc.contentType}
-                        </div>
+                  <div key={doc.id} className="document-item">
+                    <div className="document-info">
+                      <div className="document-name">{doc.fileName}</div>
+                      <div className="document-meta">
+                        <span>{formatFileSize(doc.fileSize)}</span>
+                        <span>•</span>
+                        <span>{doc.contentType}</span>
                       </div>
-                      
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <a
-                          href={doc.downloadUrl || `/api/documents/${doc.id}/download`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn"
-                        >
-                          Скачать
-                        </a>
-                        <button
-                          className="btn btnDanger"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                        >
-                          Удалить
-                        </button>
-                      </div>
+                    </div>
+                    
+                    <div className="document-actions">
+                      <a
+                        href={doc.downloadUrl || `/api/documents/${doc.id}/download`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn"
+                      >
+                        Скачать
+                      </a>
+                      <button
+                        className="btn btnDanger"
+                        onClick={() => handleDeleteDocument(doc.id)}
+                      >
+                        Удалить
+                      </button>
                     </div>
                   </div>
                 ))}
